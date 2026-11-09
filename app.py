@@ -647,7 +647,7 @@ with t1:
             st.markdown("#### Siluet Tubuh")
             fig_s=draw_human_silhouette(height,weight,gender,bi)
             st.pyplot(fig_s,use_container_width=True); plt.close()
-            st.caption("Siluet ini ilustrasi proporsi, bukan representasi wajah atau bentuk tubuh spesifik seseorang.")
+            st.caption("Siluet ini hanya ilustrasi proporsi.")
 
         with st.expander("Citra Biner OpenCV & Fitur Morfologi", expanded=True):
             img_cv = generate_body_silhouette(height, weight, gender)
