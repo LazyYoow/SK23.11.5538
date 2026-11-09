@@ -8,7 +8,7 @@
 base = "dark"
 
 # Aksen champagne gold: slider, radio, tab aktif, tombol
-primaryColor = "#D4AF37"
+primaryColor = "#60A5FA"
 
 # Latar utama: hitam arang hangat
 backgroundColor = "#09090E"
