@@ -479,7 +479,7 @@ with t4:
             cm_mat = get_confusion_matrix()
             fig,ax=plt.subplots(figsize=(8,5.5)); fig.patch.set_facecolor("#0f0c29")
             tnames=["Ext.Weak","Weak","Normal","Overweight","Obesity","Ext.Obesity"]
-            sns.heatmap(cm_mat,annot=True,fmt="d",cmap="Purples",ax=ax,xticklabels=tnames,yticklabels=tnames,linewidths=0.5,linecolor="rgba(255,255,255,0.1)")
+            sns.heatmap(cm_mat,annot=True,fmt="d",cmap="Purples",ax=ax,xticklabels=tnames,yticklabels=tnames,linewidths=0.5,linecolor=(1, 1, 1, 0.1))
             ax.set_xlabel("Predicted Label",color="white"); ax.set_ylabel("Actual Label",color="white"); ax.tick_params(colors="white",labelsize=8); ax.tick_params(axis="x",rotation=25)
             ax.set_title("Confusion Matrix — Random Forest (Data Uji 20% = 740 Sampel)",color="white",fontsize=11); ax.set_facecolor("none"); fig.patch.set_facecolor("none")
             plt.tight_layout(); st.markdown("#### Confusion Matrix — Random Forest (Split 80:20)"); st.pyplot(fig,use_container_width=True); plt.close()
