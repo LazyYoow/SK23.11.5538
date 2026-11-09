@@ -1,5 +1,5 @@
 # ============================================================
-# BMI ANALYZER — SKRIPSI EDITION (Modern Dark UI)
+# BMI ANALYZER — SKRIPSI EDITION (Elegant Dark UI)
 # Klasifikasi Kategori Indeks Massa Tubuh Menggunakan Simulasi
 # Image Processing dan Machine Learning Berbasis Data Antropometri
 # Disusun Oleh: Satrio Raja Nabil Rizky (23.11.5538)
@@ -27,18 +27,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── DESIGN TOKENS (Modern Dark — Slate) ─────────────────────
-BG_APP   = "#0B0F19"   # latar utama
-BG_CARD  = "#111827"   # kartu & sidebar
-BG_RAISE = "#1F2937"   # elemen yang sedikit lebih terang (track, hover)
-BORDER   = "#1F2937"   # garis tipis
-BORDER_2 = "#334155"   # garis yang lebih terlihat
-TXT_MAIN = "#F1F5F9"   # Slate 100
-TXT_BODY = "#CBD5E1"   # Slate 300
-TXT_SUB  = "#94A3B8"   # Slate 400
-ACCENT   = "#3B82F6"   # Blue 500
+# ── DESIGN TOKENS (Elegant Dark — Champagne Gold) ───────────
+BG_APP   = "#09090E"   # latar utama, hitam arang hangat
+BG_SIDE  = "#0E0E15"   # sidebar
+BG_CARD  = "#12121A"   # kartu & panel grafik
+BG_RAISE = "#1A1A24"   # elemen yang sedikit lebih terang
+BORDER   = "#23232F"   # garis tipis
+BORDER_2 = "#34343F"   # garis lebih terlihat (sumbu grafik)
+TXT_MAIN = "#F5F3EE"   # putih gading
+TXT_BODY = "#D6D3CC"   # teks isi
+TXT_SUB  = "#8E8B99"   # teks sekunder
+ACCENT   = "#D4AF37"   # champagne gold
+ACCENT_2 = "#7DD3C0"   # sage teal (aksen kedua)
 
-# ── GLOBAL MATPLOTLIB STYLE (dark, selaras dengan kartu) ────
+# ── GLOBAL MATPLOTLIB STYLE ─────────────────────────────────
 plt.rcParams.update({
     "figure.facecolor": BG_CARD,
     "axes.facecolor": BG_CARD,
@@ -60,191 +62,275 @@ def style_ax(ax, grid_axis=None):
     ax.tick_params(colors=TXT_BODY, labelsize=8)
     if grid_axis:
         ax.set_axisbelow(True)
-        ax.grid(axis=grid_axis, color=BORDER_2, linestyle="--", linewidth=0.6, alpha=0.6)
+        ax.grid(axis=grid_axis, color=BORDER, linestyle="-", linewidth=0.6, alpha=0.9)
     return ax
 
-# ── CUSTOM CSS (Modern Dark) ────────────────────────────────
+# ── CUSTOM CSS (Elegant Dark) ───────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
 html, body, [class*="css"], .stApp {
     font-family: 'Inter', sans-serif !important;
 }
-.stApp { background: #0B0F19; color: #F1F5F9; }
-header[data-testid="stHeader"] { background: #0B0F19; }
-.block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1280px; }
+.stApp {
+    background:
+        radial-gradient(1200px 600px at 75% -10%, rgba(212,175,55,0.07), transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, rgba(125,211,192,0.05), transparent 60%),
+        #09090E;
+    color: #F5F3EE;
+}
+header[data-testid="stHeader"] { background: transparent; }
+.block-container { padding-top: 2.2rem; padding-bottom: 3.5rem; max-width: 1280px; }
 
 /* Sidebar */
 section[data-testid="stSidebar"] {
-    background: #111827 !important;
-    border-right: 1px solid #1F2937;
+    background: linear-gradient(180deg, #0F0F17 0%, #0B0B11 100%) !important;
+    border-right: 1px solid #23232F;
 }
-section[data-testid="stSidebar"] .block-container { padding-top: 1.5rem; }
+section[data-testid="stSidebar"] .block-container { padding-top: 1.75rem; }
+section[data-testid="stSidebar"] h3 {
+    font-family: 'Playfair Display', serif !important;
+    font-weight: 600 !important; font-size: 1.35rem !important;
+}
 
 /* Typography */
-h1, h2, h3, h4 { color: #F1F5F9 !important; font-weight: 700 !important; letter-spacing: -0.01em; }
-.stApp p, .stApp li, .stApp label { color: #CBD5E1; }
-.stApp .stCaption, .stApp small { color: #94A3B8 !important; }
+h1, h2, h3, h4 { color: #F5F3EE !important; letter-spacing: -0.01em; }
+h4 { font-weight: 600 !important; font-size: 1.05rem !important; color: #F5F3EE !important; }
+.stApp p, .stApp li, .stApp label { color: #D6D3CC; }
+.stApp .stCaption, .stApp small { color: #8E8B99 !important; }
 
 /* Page header */
-.page-header { padding: 0.5rem 0 1.25rem; border-bottom: 1px solid #1F2937; margin-bottom: 1.25rem; }
-.page-eyebrow {
-    display: inline-block; font-size: 11px; font-weight: 600; color: #93C5FD;
-    text-transform: uppercase; letter-spacing: .1em; margin: 0 0 10px;
-    padding: 4px 10px; border-radius: 999px; background: rgba(59,130,246,0.12);
-    border: 1px solid rgba(59,130,246,0.25);
+.page-header {
+    position: relative; padding: 0.25rem 0 1.75rem; margin-bottom: 1.5rem;
 }
-.page-title { font-size: 2.1rem; font-weight: 800; color: #F1F5F9; margin: 0 0 6px; letter-spacing: -0.02em; }
-.page-sub { font-size: 0.97rem; color: #94A3B8; margin: 0; }
+.page-header::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+    background: linear-gradient(90deg, rgba(212,175,55,0.55), rgba(212,175,55,0.08) 60%, transparent);
+}
+.page-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 11px; font-weight: 600; color: #D4AF37;
+    text-transform: uppercase; letter-spacing: .22em; margin: 0 0 14px;
+}
+.page-eyebrow::before {
+    content: ""; width: 28px; height: 1px; background: #D4AF37;
+}
+.page-title {
+    font-family: 'Playfair Display', serif !important;
+    font-size: 3rem; font-weight: 600; line-height: 1.1; margin: 0 0 10px;
+    background: linear-gradient(115deg, #F5F3EE 25%, #D4AF37 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.page-sub { font-size: 0.98rem; color: #8E8B99; margin: 0; font-weight: 300; letter-spacing: .01em; }
+.page-author { font-size: 0.85rem; color: #D6D3CC; margin: 14px 0 0; font-weight: 400; }
 
 /* Tabs */
-div[data-baseweb="tab-list"] { gap: 28px; border-bottom: 1px solid #1F2937; }
+div[data-baseweb="tab-list"] { gap: 34px; border-bottom: 1px solid #1E1E28; }
 button[data-baseweb="tab"] {
-    color: #94A3B8 !important; font-weight: 500; font-size: 14px;
-    padding: 10px 0 12px !important; background: transparent !important;
+    color: #8E8B99 !important; font-weight: 400; font-size: 13.5px; letter-spacing: .02em;
+    padding: 12px 0 14px !important; background: transparent !important;
+    transition: color .2s ease;
 }
-button[data-baseweb="tab"]:hover { color: #E2E8F0 !important; }
-button[data-baseweb="tab"][aria-selected="true"] { color: #F1F5F9 !important; font-weight: 600; }
-div[data-baseweb="tab-highlight"] { background: #3B82F6 !important; height: 2px !important; }
+button[data-baseweb="tab"]:hover { color: #F5F3EE !important; }
+button[data-baseweb="tab"][aria-selected="true"] { color: #F5F3EE !important; font-weight: 500; }
+div[data-baseweb="tab-highlight"] {
+    background: linear-gradient(90deg, #B8912F, #E6C76A) !important; height: 1.5px !important;
+}
 
 /* Metric cards */
 div[data-testid="stMetric"], div[data-testid="metric-container"] {
-    background: #111827;
-    border: 1px solid #1F2937;
-    border-radius: 12px;
-    padding: 1rem 1.2rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    background: linear-gradient(180deg, #15151E 0%, #0F0F16 100%);
+    border: 1px solid #23232F;
+    border-radius: 16px;
+    padding: 1.1rem 1.3rem 1.2rem;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025), 0 18px 40px -24px rgba(0,0,0,0.8);
 }
 div[data-testid="stMetricLabel"] p {
-    color: #94A3B8 !important; font-size: 12px !important; font-weight: 500 !important;
-    text-transform: uppercase; letter-spacing: .04em;
+    color: #8E8B99 !important; font-size: 11px !important; font-weight: 500 !important;
+    text-transform: uppercase; letter-spacing: .14em;
 }
-div[data-testid="stMetricValue"] { color: #F1F5F9 !important; font-weight: 700; }
+div[data-testid="stMetricValue"] {
+    color: #F5F3EE !important; font-weight: 500;
+    font-family: 'Playfair Display', serif !important; font-size: 2rem !important;
+}
 
 /* Bordered containers (chart cards) */
 div[data-testid="stVerticalBlockBorderWrapper"] > div > div > div[data-testid="stVerticalBlock"] {
-    gap: 0.75rem;
+    gap: 0.8rem;
 }
 div[data-testid="stVerticalBlockBorderWrapper"] {
-    border-radius: 12px !important;
-    border: 1px solid #1F2937 !important;
-    background: #111827;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    border-radius: 16px !important;
+    border: 1px solid #23232F !important;
+    background: linear-gradient(180deg, #14141D 0%, #0F0F16 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025), 0 18px 40px -26px rgba(0,0,0,0.85);
+    padding: 0.4rem 0.6rem;
 }
 
 /* Expander */
 div[data-testid="stExpander"] {
-    background: #111827; border: 1px solid #1F2937 !important; border-radius: 12px !important;
+    background: linear-gradient(180deg, #14141D 0%, #0F0F16 100%);
+    border: 1px solid #23232F !important; border-radius: 16px !important;
 }
-div[data-testid="stExpander"] summary p { color: #E2E8F0 !important; font-weight: 600; }
+div[data-testid="stExpander"] summary p { color: #E7E4DC !important; font-weight: 500; }
 
 /* Buttons */
 .stButton > button {
-    background: #3B82F6; color: #FFFFFF; border: 1px solid #3B82F6;
-    border-radius: 10px; font-weight: 600; font-size: 14px;
-    padding: 0.55rem 1rem; width: 100%; box-shadow: none;
+    background: linear-gradient(135deg, #E6C76A 0%, #B8912F 100%);
+    color: #0A0A0F; border: 0;
+    border-radius: 12px; font-weight: 600; font-size: 13.5px; letter-spacing: .02em;
+    padding: 0.6rem 1rem; width: 100%;
+    box-shadow: 0 10px 24px -12px rgba(212,175,55,0.55);
+    transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
 }
-.stButton > button:hover { background: #2563EB; border-color: #2563EB; color: #FFFFFF; }
-.stButton > button:focus { box-shadow: 0 0 0 3px rgba(59,130,246,0.35); }
-.stButton > button:active { background: #1D4ED8; }
-
-/* Category pill */
-.pill {
-    display: inline-block; padding: 3px 10px; border-radius: 999px;
-    font-size: 12px; font-weight: 600; border: 1px solid; background: transparent;
+.stButton > button:hover {
+    color: #0A0A0F; filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px -12px rgba(212,175,55,0.65);
 }
+.stButton > button:active { transform: translateY(0); }
+.stButton > button:focus { box-shadow: 0 0 0 3px rgba(212,175,55,0.28); }
 
 /* Sidebar BMI card */
 .bmi-card {
-    background: #0B0F19; border: 1px solid #1F2937; border-radius: 12px;
-    padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    background: linear-gradient(180deg, #17171F 0%, #101018 100%);
+    border: 1px solid #26262F; border-radius: 16px; padding: 16px 18px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
 }
-.card-label { font-size: 11px; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 6px; }
-.card-value { font-size: 1.5rem; font-weight: 700; color: #F1F5F9; margin: 0; }
-.card-sub { font-size: 13px; color: #94A3B8; margin: 4px 0 0; }
+.card-label {
+    font-size: 10.5px; font-weight: 500; color: #8E8B99;
+    text-transform: uppercase; letter-spacing: .16em; margin: 0 0 8px;
+}
+.card-value {
+    font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 500;
+    color: #F5F3EE; margin: 0; line-height: 1.1;
+}
+.card-sub { font-size: 12.5px; color: #8E8B99; margin: 6px 0 0; }
+
+/* Pill */
+.pill {
+    display: inline-block; padding: 4px 11px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 500; letter-spacing: .03em;
+    border: 1px solid; background: rgba(255,255,255,0.02);
+}
 
 /* IMT scale */
 .scale-wrap { margin: 0.25rem 0 0.5rem; }
-.scale-label { font-size: 12px; color: #94A3B8; font-weight: 500; margin: 0 0 10px; }
+.scale-label {
+    font-size: 10.5px; color: #8E8B99; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .16em; margin: 0 0 14px;
+}
 .scale-track {
-    position: relative; height: 8px; border-radius: 4px;
-    background: linear-gradient(to right, #3B82F6, #22C55E, #F59E0B, #EF4444, #7C3AED);
+    position: relative; height: 4px; border-radius: 4px;
+    background: linear-gradient(90deg, #60A5FA 0%, #4ADE80 28%, #FBBF24 52%, #F87171 76%, #A78BFA 100%);
+    opacity: 0.9;
 }
 .scale-marker {
     position: absolute; top: 50%; transform: translate(-50%, -50%);
-    width: 16px; height: 16px; border-radius: 50%;
-    background: #0B0F19; border: 2px solid #F1F5F9;
-    box-shadow: 0 0 0 4px rgba(241,245,249,0.08);
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #09090E; border: 1.5px solid #E6C76A;
+    box-shadow: 0 0 0 5px rgba(212,175,55,0.12), 0 0 18px rgba(212,175,55,0.35);
 }
-.scale-ticks { display: flex; justify-content: space-between; font-size: 11px; color: #94A3B8; margin-top: 8px; }
+.scale-ticks {
+    display: flex; justify-content: space-between; font-size: 10.5px;
+    color: #8E8B99; margin-top: 12px; letter-spacing: .04em;
+}
 
 /* Prediction box */
-.pred-box { border: 1px solid #1F2937; border-radius: 12px; padding: 14px 16px; background: #0B0F19; }
-.pred-title { font-size: 11px; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 8px; }
-.pred-meta { font-size: 12px; color: #94A3B8; margin: 8px 0 0; }
+.pred-box {
+    border: 1px solid #23232F; border-radius: 16px; padding: 18px 20px;
+    background: linear-gradient(180deg, #15151E 0%, #0E0E15 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+}
+.pred-title {
+    font-size: 10.5px; font-weight: 500; color: #8E8B99;
+    text-transform: uppercase; letter-spacing: .16em; margin: 0 0 12px;
+}
+.pred-meta { font-size: 12px; color: #8E8B99; margin: 12px 0 0; line-height: 1.6; }
 
 /* Probability bars (Tab 3) */
-.prob-row { margin-bottom: 14px; }
-.prob-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; margin-bottom: 6px; color: #F1F5F9; }
-.prob-sub { color: #94A3B8; font-size: 12px; margin-left: 6px; }
-.prob-val { font-weight: 600; }
-.prob-track { height: 8px; background: #1F2937; border-radius: 4px; overflow: hidden; }
-.prob-fill { height: 100%; border-radius: 4px; }
+.prob-row { margin-bottom: 18px; }
+.prob-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 14px; margin-bottom: 9px; color: #F5F3EE;
+}
+.prob-sub { color: #8E8B99; font-size: 12px; margin-left: 8px; font-weight: 300; }
+.prob-val { font-weight: 500; font-family: 'Playfair Display', serif; font-size: 1.05rem; }
+.prob-track { height: 6px; background: #1C1C26; border-radius: 6px; overflow: hidden; }
+.prob-fill { height: 100%; border-radius: 6px; }
 
 /* Recommendation */
 .cat-banner {
-    background: #111827; border: 1px solid #1F2937; border-radius: 12px;
-    padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+    background: linear-gradient(135deg, #161621 0%, #0F0F16 100%);
+    border: 1px solid #23232F; border-radius: 16px;
+    padding: 1.5rem 1.75rem; margin-bottom: 1.4rem;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
 }
-.cat-banner-title { font-size: 1.3rem; font-weight: 700; margin: 0 0 6px; }
-.cat-banner-meta { font-size: 14px; color: #94A3B8; margin: 0; }
+.cat-banner-title {
+    font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 500;
+    margin: 0 0 8px;
+}
+.cat-banner-meta { font-size: 13.5px; color: #8E8B99; margin: 0; }
 .rec-item {
-    display: flex; gap: 14px; align-items: flex-start;
-    background: #111827; border: 1px solid #1F2937; border-radius: 12px;
-    padding: 14px 16px; margin-bottom: 10px;
+    display: flex; gap: 16px; align-items: flex-start;
+    background: linear-gradient(180deg, #14141D 0%, #0F0F16 100%);
+    border: 1px solid #23232F; border-radius: 14px;
+    padding: 16px 18px; margin-bottom: 12px;
 }
 .rec-icon {
-    flex: 0 0 36px; height: 36px; border-radius: 8px; background: #1F2937;
-    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    flex: 0 0 38px; height: 38px; border-radius: 11px; background: #1A1A24;
+    border: 1px solid #2A2A36;
+    display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
 }
-.rec-title { font-weight: 600; color: #F1F5F9; margin: 0 0 4px; font-size: 0.97rem; }
-.rec-desc { color: #94A3B8; margin: 0; font-size: 0.9rem; line-height: 1.6; }
+.rec-title { font-weight: 500; color: #F5F3EE; margin: 0 0 5px; font-size: 0.97rem; }
+.rec-desc { color: #8E8B99; margin: 0; font-size: 0.89rem; line-height: 1.65; font-weight: 300; }
+
+/* Dataframe polish */
+div[data-testid="stDataFrame"] {
+    border: 1px solid #23232F; border-radius: 14px; overflow: hidden;
+}
+
+/* Gold divider */
+.gold-rule {
+    height: 1px; border: 0; margin: 1.6rem 0;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent);
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ── CONSTANTS ──────────────────────────────────────────────
 LABEL_MAP   = {0:"Extremely Weak",1:"Weak",2:"Normal",3:"Overweight",4:"Obesity",5:"Extreme Obesity"}
 LABEL_ID    = {0:"Sangat Kurus",  1:"Kurus",  2:"Normal", 3:"Overweight",4:"Obesitas",5:"Sangat Obesitas"}
-CAT_COLORS  = ["#3B82F6","#22C55E","#00D4A1","#F59E0B","#EF4444","#7C3AED"]
+# Warna kategori (semantik): dipertahankan agar konsisten antar tab
+CAT_COLORS  = ["#60A5FA","#4ADE80","#7DD3C0","#FBBF24","#F87171","#A78BFA"]
 CAT_BG      = ["#1e3a5f","#14532d","#065f46","#78350f","#7f1d1d","#3b0764"]
 
 RECOMMENDATIONS = {
-    0:{"title":"⚠️ Perlu Perhatian Ekstra","color":"#3B82F6","items":[
+    0:{"title":"Perlu Perhatian Ekstra","color":"#60A5FA","items":[
         ("🥗","Perbanyak Kalori Bergizi","Makanan padat nutrisi: kacang, alpukat, nasi merah, protein hewani berkualitas."),
         ("🏋️","Latihan Pembentuk Otot","Latihan beban 3×/minggu. Target massa otot bukan sekadar angka timbangan."),
         ("🩺","Konsultasi Dokter Gizi","BMI sangat rendah bisa menandakan kondisi medis tersembunyi."),
         ("😴","Tidur 7–9 Jam Cukup","Tidur berkualitas mendukung hormon pertumbuhan & nafsu makan.")]},
-    1:{"title":"📈 Tingkatkan Nutrisi","color":"#22C55E","items":[
+    1:{"title":"Tingkatkan Nutrisi","color":"#4ADE80","items":[
         ("🍳","Protein & Karbohidrat Kompleks","Target 1.5–2g protein/kg BB. Makan 5–6 kali porsi kecil per hari."),
         ("🚴","Olahraga Ringan Rutin","30 menit jalan cepat atau bersepeda per hari. Bangun metabolisme."),
         ("🧘","Kelola Stres","Stres menekan nafsu makan. Meditasi 10 menit/hari sangat membantu.")]},
-    2:{"title":"🏆 Pertahankan Pola Hidup Sehat!","color":"#00D4A1","items":[
+    2:{"title":"Pertahankan Pola Hidup Sehat","color":"#7DD3C0","items":[
         ("🎯","Kamu Sudah di Jalur Tepat!","BMI ideal! Pertahankan pola makan seimbang dan olahraga rutin."),
         ("❤️","Olahraga Rutin & Gizi Seimbang","150 menit aktivitas sedang/minggu. Perbanyak sayur, buah, protein."),
         ("🔄","Cek Rutin 3–6 Bulan","Monitor BMI periodik. Perubahan kecil lebih mudah ditangani dini."),
         ("💧","Hidrasi Optimal","2–2.5 liter air/hari. Kurangi minuman manis dan soda.")]},
-    3:{"title":"⚡ Kendalikan Berat Badan","color":"#F59E0B","items":[
+    3:{"title":"Kendalikan Berat Badan","color":"#FBBF24","items":[
         ("🚶","Mulai Aktif Sekarang","10.000 langkah/hari atau 45 menit cardio. Gunakan tangga lebih sering."),
         ("🥗","Kurangi Gula & Gorengan","Ganti dengan whole food. Biasakan membaca label nutrisi sebelum beli."),
         ("📊","Defisit Kalori Aman","300–500 kkal/hari = turun 0.3–0.5 kg/minggu secara berkelanjutan."),
         ("😴","Perbaiki Kualitas Tidur","Kurang tidur naikkan hormon lapar. Target 7–9 jam/malam.")]},
-    4:{"title":"🚨 Prioritaskan Kesehatan","color":"#EF4444","items":[
+    4:{"title":"Prioritaskan Kesehatan","color":"#F87171","items":[
         ("🏥","Konsultasi Dokter Segera","Obesitas tingkatkan risiko diabetes, hipertensi, penyakit jantung."),
         ("🏊","Olahraga Rendah Benturan","Renang atau sepeda statis aman untuk sendi. Mulai 20 menit/hari."),
         ("🥦","Diet Terstruktur","Hindari crash diet. Makan 3×/hari porsi terkontrol, banyak serat."),
         ("👥","Dukungan Sosial","Bergabung komunitas kesehatan. Konsistensi lebih penting dari sempurna.")]},
-    5:{"title":"🆘 Tindakan Segera Diperlukan","color":"#7C3AED","items":[
+    5:{"title":"Tindakan Segera Diperlukan","color":"#A78BFA","items":[
         ("🏥","Program Medis Profesional","BMI >40: intervensi medis mendesak. Hubungi dokter spesialis obesitas."),
         ("❤️","Monitor Tekanan Darah","Cek rutin. Target <120/80 mmHg. Kurangi garam & makanan olahan."),
         ("🚶","Mulai dari Langkah Kecil","Berjalan 10 menit 3×/hari sudah bermakna klinis. Tingkatkan perlahan."),
@@ -353,7 +439,7 @@ def draw_human_silhouette(height, weight, gender, idx):
 with st.sidebar:
     st.markdown("### Input Data Antropometri")
     st.caption("Atur parameter fisik untuk menghitung IMT dan kategori.")
-    st.markdown("---")
+    st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
     gender=st.radio("Jenis Kelamin",["Male","Female"],format_func=lambda x:"Laki-laki" if x=="Male" else "Perempuan")
     height=st.slider("Tinggi Badan (cm)",140,200,170)
     weight=st.slider("Berat Badan (kg)",35,165,70)
@@ -361,19 +447,19 @@ with st.sidebar:
     bmi_val=weight/(height/100)**2
     bi=bmi_index(bmi_val)
     c2=CAT_COLORS[bi]
-    st.markdown("---")
+    st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
     st.markdown(f"""
 <div class="bmi-card">
 <p class="card-label">BMI / IMT</p>
 <p class="card-value">{bmi_val:.1f}</p>
-<div style="margin-top:10px">
-<span class="pill" style="color:{c2};border-color:{c2}">{LABEL_ID[bi]}</span>
+<div style="margin-top:12px">
+<span class="pill" style="color:{c2};border-color:{c2}55">{LABEL_ID[bi]}</span>
 </div>
 <p class="card-sub">{format_sub_label(bi)}</p>
 </div>""", unsafe_allow_html=True)
     il=round(18.5*(height/100)**2); ih=round(24.9*(height/100)**2)
-    st.markdown(f"<p class='card-sub' style='margin-top:12px'><b style='color:{TXT_MAIN}'>Berat Ideal:</b> {il}–{ih} kg</p>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown(f"<p class='card-sub' style='margin-top:14px'><span style='color:{TXT_SUB}'>Berat Ideal</span>&nbsp;&nbsp;<b style='color:{TXT_MAIN};font-weight:500'>{il}–{ih} kg</b></p>", unsafe_allow_html=True)
+    st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
     predict_btn=st.button("Prediksi IMT",use_container_width=True)
 
 # ── HEADER ──────────────────────────────────────────────────
@@ -382,7 +468,7 @@ st.markdown("""
 <span class="page-eyebrow">Skripsi S1 Informatika · Universitas AMIKOM Yogyakarta</span>
 <h1 class="page-title">BMI Analyzer</h1>
 <p class="page-sub">Klasifikasi kategori IMT melalui simulasi citra biner dan machine learning</p>
-<p class="page-sub" style="margin-top:6px">Satrio Raja Nabil Rizky (23.11.5538)</p>
+<p class="page-author">Satrio Raja Nabil Rizky &nbsp;·&nbsp; 23.11.5538</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -404,7 +490,7 @@ with t1:
             img_cv = generate_body_silhouette(height, weight, gender)
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_GRAY2RGB)
             cnts, _ = cv2.findContours(img_cv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cv2.drawContours(img_rgb, cnts, -1, (59, 130, 246), 2)
+            cv2.drawContours(img_rgb, cnts, -1, (212, 175, 55), 2)
             st.image(img_rgb, caption="Citra siluet biner OpenCV (128×128 px) dengan kontur", use_container_width=True)
             f_img = extract_image_features(img_cv)
             st.json({
@@ -429,7 +515,7 @@ with t1:
         else:
             m3.metric("Gap Ideal", "0 kg", delta="Sudah Ideal ✓", delta_color="normal")
 
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
         bp=min(max((bmi_val-10)/50*100,0),100)
         st.markdown(
             '<div class="scale-wrap">'
@@ -440,7 +526,7 @@ with t1:
             '<div class="scale-ticks"><span>Kurus</span><span>Normal</span><span>Gemuk</span><span>Obesitas</span><span>Parah</span></div>'
             '</div>', unsafe_allow_html=True)
 
-        st.markdown("---")
+        st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
 
         if model_loaded:
             fv=build_feature_vector(gender,height,weight)
@@ -450,16 +536,16 @@ with t1:
             conf=max(proba)*100
             c3=CAT_COLORS[pred]
             st.markdown(
-                f'<div class="pred-box" style="border-left:3px solid {c3}">'
+                f'<div class="pred-box" style="border-left:2px solid {c3}">'
                 '<p class="pred-title">Prediksi Machine Learning</p>'
-                f'<span class="pill" style="color:{c3};border-color:{c3}">{LABEL_ID[pred]}</span>'
-                f'<span style="margin-left:8px;color:{TXT_MAIN};font-weight:600;font-size:14px">{format_sub_label(pred)}</span>'
-                f'<p class="pred-meta">Confidence {conf:.1f}% · Model Random Forest (Acc 99.73% pada n=3,700)</p>'
+                f'<span class="pill" style="color:{c3};border-color:{c3}55">{LABEL_ID[pred]}</span>'
+                f'<span style="margin-left:10px;color:{TXT_MAIN};font-family:Playfair Display,serif;font-size:1.05rem">{format_sub_label(pred)}</span>'
+                f'<p class="pred-meta">Confidence {conf:.1f}% &nbsp;·&nbsp; Model Random Forest (Acc 99.73% pada n=3,700)</p>'
                 '</div>', unsafe_allow_html=True)
         else:
             st.warning("Pastikan model_bmi.pkl dan scaler_bmi.pkl tersedia di repositori.")
 
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
         info_df=pd.DataFrame({
             "Atribut / Fitur":["Tinggi Badan","Berat Badan","BMI / IMT","Kategori (EN)","Kategori (ID)","Rentang Berat Ideal","Pixel Area (Citra)","Aspect Ratio (Citra)","Body Density (Citra)","Contour Perimeter","Compactness"],
             "Nilai":[f"{height} cm",f"{weight} kg",f"{bmi_val:.2f} kg/m²",LABEL_MAP[bi],LABEL_ID[bi],f"{il}–{ih} kg",f"{int(f_img[0])} px²",f"{f_img[1]:.4f}",f"{f_img[2]:.4f}",f"{f_img[3]:.4f}",f"{f_img[4]:.4f}"]
@@ -482,7 +568,7 @@ with t2:
         s3.metric("Kategori IMT","6 Kelas")
         s4.metric("Best Accuracy (RF)","99.78%")
 
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
         ca2,cb2=st.columns(2)
         with ca2:
             with st.container(border=True):
@@ -490,8 +576,8 @@ with t2:
                 fig,ax=plt.subplots(figsize=(6,4))
                 style_ax(ax,grid_axis="y")
                 cnt=df_data["Index"].value_counts().sort_index()
-                bars=ax.bar([label_map_en[i] for i in cnt.index],cnt.values,color=[CAT_COLORS[i] for i in cnt.index],alpha=0.9,edgecolor=BG_CARD,linewidth=0.5,width=0.6)
-                for b,v in zip(bars,cnt.values): ax.text(b.get_x()+b.get_width()/2,b.get_height()+10,str(v),ha="center",va="bottom",color=TXT_MAIN,fontsize=9,fontweight="bold")
+                bars=ax.bar([label_map_en[i] for i in cnt.index],cnt.values,color=[CAT_COLORS[i] for i in cnt.index],alpha=0.88,edgecolor=BG_CARD,linewidth=0.5,width=0.6)
+                for b,v in zip(bars,cnt.values): ax.text(b.get_x()+b.get_width()/2,b.get_height()+10,str(v),ha="center",va="bottom",color=TXT_MAIN,fontsize=9)
                 ax.set_ylabel("Jumlah Sampel"); ax.tick_params(axis="x",rotation=25,labelsize=7)
                 plt.tight_layout(); st.pyplot(fig,use_container_width=True); plt.close()
         with cb2:
@@ -499,8 +585,8 @@ with t2:
                 st.markdown("#### Distribusi Gender")
                 fig,ax=plt.subplots(figsize=(4,4))
                 gc=df_data["Gender"].value_counts()
-                wedges,texts,autotexts=ax.pie(gc,labels=gc.index,autopct="%1.1f%%",colors=[ACCENT,"#14B8A6"],startangle=90,wedgeprops={"edgecolor":BG_CARD,"linewidth":2},textprops={"color":TXT_BODY})
-                for a in autotexts: a.set_color("#FFFFFF"); a.set_fontweight("bold")
+                wedges,texts,autotexts=ax.pie(gc,labels=gc.index,autopct="%1.1f%%",colors=[ACCENT,ACCENT_2],startangle=90,wedgeprops={"edgecolor":BG_CARD,"linewidth":2},textprops={"color":TXT_BODY})
+                for a in autotexts: a.set_color("#09090E"); a.set_fontweight("bold")
                 ax.set_facecolor(BG_CARD)
                 st.pyplot(fig,use_container_width=True); plt.close()
 
@@ -510,7 +596,7 @@ with t2:
             style_ax(ax,grid_axis="both")
             for idx2 in sorted(df_data["Index"].unique()):
                 sub=df_data[df_data["Index"]==idx2]
-                ax.scatter(sub["Height"],sub["Weight"],c=CAT_COLORS[idx2],label=label_map_en[idx2],alpha=0.75,s=28,edgecolors="none")
+                ax.scatter(sub["Height"],sub["Weight"],c=CAT_COLORS[idx2],label=label_map_en[idx2],alpha=0.8,s=26,edgecolors="none")
             ax.set_xlabel("Tinggi Badan (cm)"); ax.set_ylabel("Berat Badan (kg)")
             ax.legend(fontsize=8,labelcolor=TXT_BODY,facecolor=BG_RAISE,edgecolor=BORDER_2)
             st.pyplot(fig,use_container_width=True); plt.close()
@@ -544,7 +630,7 @@ with t3:
                 st.markdown(
                     '<div class="prob-row">'
                     '<div class="prob-head">'
-                    f'<span>{ind}<b>{cat}</b><span class="prob-sub">{LABEL_MAP[i]}</span></span>'
+                    f'<span>{ind}{cat}<span class="prob-sub">{LABEL_MAP[i]}</span></span>'
                     f'<span class="prob-val" style="color:{CAT_COLORS[i]}">{pct:.1f}%</span>'
                     '</div>'
                     '<div class="prob-track">'
@@ -558,7 +644,7 @@ with t3:
                 st.markdown("#### Distribusi Probabilitas (Bar)")
                 fig,ax=plt.subplots(figsize=(6,4))
                 style_ax(ax,grid_axis="y")
-                bars=ax.bar(list(LABEL_ID.values()),prob_full*100,color=CAT_COLORS,alpha=0.9,edgecolor=BG_CARD,linewidth=0.5,width=0.6)
+                bars=ax.bar(list(LABEL_ID.values()),prob_full*100,color=CAT_COLORS,alpha=0.88,edgecolor=BG_CARD,linewidth=0.5,width=0.6)
                 for b,v in zip(bars,prob_full*100): ax.text(b.get_x()+b.get_width()/2,b.get_height()+0.3,f"{v:.1f}%",ha="center",va="bottom",color=TXT_MAIN,fontsize=8)
                 ax.set_ylabel("Probabilitas (%)"); ax.set_ylim(0,115); ax.tick_params(axis="x",rotation=20,labelsize=7)
                 plt.tight_layout(); st.pyplot(fig,use_container_width=True); plt.close()
@@ -568,7 +654,7 @@ with t3:
                 fig,ax=plt.subplots(figsize=(5,4))
                 ws,ts,ats=ax.pie(prob_full+0.001,labels=list(LABEL_ID.values()),autopct=lambda p:f"{p:.1f}%" if p>1 else "",colors=CAT_COLORS,startangle=90,wedgeprops={"edgecolor":BG_CARD,"linewidth":1.5},textprops={"color":TXT_BODY})
                 for x in ts: x.set_fontsize(7)
-                for x in ats: x.set_color("#FFFFFF"); x.set_fontsize(7); x.set_fontweight("bold")
+                for x in ats: x.set_color("#09090E"); x.set_fontsize(7); x.set_fontweight("bold")
                 st.pyplot(fig,use_container_width=True); plt.close()
 
         st.dataframe(pd.DataFrame({"Kategori ID":list(LABEL_ID.values()),"Kategori EN":list(LABEL_MAP.values()),"Probabilitas (%)":[f"{p*100:.2f}%" for p in prob_full],"Prediksi":["YA" if i==pred2 else "—" for i in range(6)]}),hide_index=True,use_container_width=True)
@@ -602,7 +688,7 @@ with t4:
     with st.expander("Lihat rincian pembagian jumlah data train & testing (5 varian split)"):
         st.dataframe(pd.DataFrame(SPLIT_INFO),hide_index=True,use_container_width=True)
 
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
     ca4,cb4=st.columns(2)
     with ca4:
         with st.container(border=True):
@@ -611,8 +697,8 @@ with t4:
             style_ax(ax,grid_axis="x")
             nms=["Random Forest","Gradient Boosting","Decision Tree","SVM (RBF)","Logistic Reg.","KNN"]
             acs=[99.73,99.59,99.59,97.57,97.03,96.49]
-            cls_c=[("#14B8A6" if a>=99.5 else ACCENT if a>=97 else "#F59E0B") for a in acs]
-            brs=ax.barh(nms[::-1],acs[::-1],color=cls_c[::-1],alpha=0.9,edgecolor=BG_CARD,linewidth=0.5)
+            cls_c=[(ACCENT if a>=99.5 else ACCENT_2 if a>=97 else "#8E8B99") for a in acs]
+            brs=ax.barh(nms[::-1],acs[::-1],color=cls_c[::-1],alpha=0.88,edgecolor=BG_CARD,linewidth=0.5)
             for b,v in zip(brs,acs[::-1]): ax.text(v+0.15,b.get_y()+b.get_height()/2,f"{v:.2f}%",ha="left",va="center",color=TXT_MAIN,fontsize=9)
             ax.set_xlim(90,102); ax.set_xlabel("Accuracy (%)")
             ax.tick_params(labelsize=9)
@@ -626,11 +712,11 @@ with t4:
             style_ax(ax,grid_axis="x")
             img_feats_names=["aspect_ratio","pixel_area","body_density","contour_perimeter","compactness"]
             fn=[f[0] for f in FEAT_IMP]; fi=[f[1] for f in FEAT_IMP]
-            clrs2=[("#F87171" if f in img_feats_names else ACCENT) for f in fn]
-            ax.barh(fn[::-1],fi[::-1],color=clrs2[::-1],alpha=0.9,edgecolor=BG_CARD,linewidth=0.5)
+            clrs2=[(ACCENT_2 if f in img_feats_names else ACCENT) for f in fn]
+            ax.barh(fn[::-1],fi[::-1],color=clrs2[::-1],alpha=0.88,edgecolor=BG_CARD,linewidth=0.5)
             ax.set_xlabel("Importance (%)"); ax.tick_params(labelsize=8)
-            red_p=mpatches.Patch(color="#F87171",label="Fitur Citra Siluet"); blue_p=mpatches.Patch(color=ACCENT,label="Fitur Antropometri")
-            ax.legend(handles=[red_p,blue_p],fontsize=8,labelcolor=TXT_BODY,facecolor=BG_RAISE,edgecolor=BORDER_2)
+            gold_p=mpatches.Patch(color=ACCENT,label="Fitur Antropometri"); teal_p=mpatches.Patch(color=ACCENT_2,label="Fitur Citra Siluet")
+            ax.legend(handles=[gold_p,teal_p],fontsize=8,labelcolor=TXT_BODY,facecolor=BG_RAISE,edgecolor=BORDER_2)
             plt.tight_layout(); st.pyplot(fig,use_container_width=True); plt.close()
 
     if model_loaded:
@@ -664,7 +750,7 @@ with t4:
                 st.markdown("#### Confusion Matrix — Random Forest (Split 80:20)")
                 fig,ax=plt.subplots(figsize=(8,5.5))
                 tnames=["Ext.Weak","Weak","Normal","Overweight","Obesity","Ext.Obesity"]
-                sns.heatmap(cm_mat,annot=True,fmt="d",cmap="Blues",ax=ax,xticklabels=tnames,yticklabels=tnames,linewidths=0.5,linecolor="#1F2937")
+                sns.heatmap(cm_mat,annot=True,fmt="d",cmap="YlOrBr",ax=ax,xticklabels=tnames,yticklabels=tnames,linewidths=0.5,linecolor="#23232F")
                 ax.set_xlabel("Predicted Label"); ax.set_ylabel("Actual Label")
                 ax.tick_params(colors=TXT_BODY,labelsize=8); ax.tick_params(axis="x",rotation=25)
                 ax.set_title("Confusion Matrix — Random Forest (Data Uji 20% = 740 Sampel)",color=TXT_MAIN,fontsize=11)
@@ -679,15 +765,15 @@ with t5:
     st.markdown("#### Rekomendasi Kesehatan Personal")
     rec=RECOMMENDATIONS[bi]; rc=rec["color"]
     st.markdown(
-        f'<div class="cat-banner" style="border-left:4px solid {rc}">'
+        f'<div class="cat-banner" style="border-left:2px solid {rc}">'
         f'<p class="cat-banner-title" style="color:{rc}">{rec["title"]}</p>'
-        f'<p class="cat-banner-meta">Kategori: <b style="color:{TXT_MAIN}">{LABEL_ID[bi]}</b> ({LABEL_MAP[bi]}) · '
-        f'BMI: <b style="color:{TXT_MAIN}">{bmi_val:.1f}</b> · {height} cm · {weight} kg</p>'
+        f'<p class="cat-banner-meta">Kategori: <span style="color:{TXT_MAIN}">{LABEL_ID[bi]}</span> ({LABEL_MAP[bi]}) &nbsp;·&nbsp; '
+        f'BMI: <span style="color:{TXT_MAIN}">{bmi_val:.1f}</span> &nbsp;·&nbsp; {height} cm &nbsp;·&nbsp; {weight} kg</p>'
         '</div>', unsafe_allow_html=True)
 
     for em,tit,desc in rec["items"]:
         st.markdown(
-            f'<div class="rec-item" style="border-left:3px solid {rc}">'
+            f'<div class="rec-item" style="border-left:2px solid {rc}">'
             f'<div class="rec-icon">{em}</div>'
             '<div>'
             f'<p class="rec-title">{tit}</p>'
@@ -695,13 +781,13 @@ with t5:
             '</div>'
             '</div>', unsafe_allow_html=True)
 
-    st.markdown("---")
+    st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
     st.markdown("#### Panduan Berat Badan Berdasarkan Tinggi Badan Anda")
     td=pd.DataFrame({"Kategori (ID)":list(LABEL_ID.values()),"Kategori (EN)":list(LABEL_MAP.values()),"BMI Range":["< 16","16–18.5","18.5–25","25–30","30–40","> 40"],"Rentang Berat (kg)":[f"{round(lo*(height/100)**2)}–{round(hi*(height/100)**2)}" for lo,hi in [(10,16),(16,18.5),(18.5,25),(25,30),(30,40),(40,55)]]})
     st.dataframe(td,hide_index=True,use_container_width=True)
 
 # ── BATCH PREDICTION ────────────────────────────────────────
-st.markdown("---")
+st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
 st.markdown("#### Prediksi Batch (Upload File CSV)")
 st.caption("Format kolom CSV: Gender (Male/Female), Height (cm), Weight (kg)")
 uploaded_file=st.file_uploader("Upload file CSV",type=["csv"])
