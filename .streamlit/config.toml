@@ -1,6 +1,24 @@
-  [theme]
-  base = "light"
-  primaryColor = "#2563EB"
-  backgroundColor = "#F8FAFC"
-  secondaryBackgroundColor = "#FFFFFF"
-  textColor = "#0F172A"
+# ============================================================
+# Konfigurasi Tema Streamlit — Modern Dark (Slate)
+# File ini harus berada di folder .streamlit/ yang sejajar
+# dengan app.py saat menjalankan: streamlit run app.py
+# ============================================================
+
+[theme]
+# Basis tema gelap agar widget bawaan (slider, radio, tabel) ikut gelap
+base = "dark"
+
+# Warna aksen: slider, radio, tab aktif, dan elemen interaktif (Blue 500)
+primaryColor = "#3B82F6"
+
+# Latar utama aplikasi
+backgroundColor = "#0B0F19"
+
+# Latar sidebar dan widget (sedikit lebih terang dari latar utama)
+secondaryBackgroundColor = "#111827"
+
+# Warna teks utama
+textColor = "#F1F5F9"
+
+# Font: "sans serif", "serif", atau "monospace"
+font = "sans serif"
