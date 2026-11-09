@@ -1,24 +1,22 @@
 # ============================================================
-# Konfigurasi Tema Streamlit — Modern Dark (Slate)
+# Konfigurasi Tema Streamlit — Elegant Dark (Champagne Gold)
 # File ini harus berada di folder .streamlit/ yang sejajar
 # dengan app.py saat menjalankan: streamlit run app.py
 # ============================================================
 
 [theme]
-# Basis tema gelap agar widget bawaan (slider, radio, tabel) ikut gelap
 base = "dark"
 
-# Warna aksen: slider, radio, tab aktif, dan elemen interaktif (Blue 500)
-primaryColor = "#3B82F6"
+# Aksen champagne gold: slider, radio, tab aktif, tombol
+primaryColor = "#D4AF37"
 
-# Latar utama aplikasi
-backgroundColor = "#0B0F19"
+# Latar utama: hitam arang hangat
+backgroundColor = "#09090E"
 
-# Latar sidebar dan widget (sedikit lebih terang dari latar utama)
-secondaryBackgroundColor = "#111827"
+# Latar sidebar dan widget
+secondaryBackgroundColor = "#12121A"
 
-# Warna teks utama
-textColor = "#F1F5F9"
+# Teks utama: putih gading
+textColor = "#F5F3EE"
 
-# Font: "sans serif", "serif", atau "monospace"
 font = "sans serif"
