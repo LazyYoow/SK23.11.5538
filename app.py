@@ -1,5 +1,5 @@
 # ============================================================
-# BMI ANALYZER  — SKRIPSI EDITION (Modern Dark UI)
+# BMI ANALYZER — SKRIPSI EDITION (Modern Dark UI)
 # Klasifikasi Kategori Indeks Massa Tubuh Menggunakan Simulasi
 # Image Processing dan Machine Learning Berbasis Data Antropometri
 # Disusun Oleh: Satrio Raja Nabil Rizky (23.11.5538)
@@ -148,10 +148,6 @@ div[data-testid="stExpander"] summary p { color: #E2E8F0 !important; font-weight
 .stButton > button:hover { background: #2563EB; border-color: #2563EB; color: #FFFFFF; }
 .stButton > button:focus { box-shadow: 0 0 0 3px rgba(59,130,246,0.35); }
 .stButton > button:active { background: #1D4ED8; }
-.st-key-btn_mlflow > div > button {
-    background: transparent !important; color: #E2E8F0 !important; border: 1px solid #334155 !important;
-}
-.st-key-btn_mlflow > div > button:hover { background: #1F2937 !important; border-color: #475569 !important; }
 
 /* Category pill */
 .pill {
@@ -315,6 +311,9 @@ def bmi_index(bmi):
     if bmi<40: return 4
     return 5
 
+def format_sub_label(idx):
+    return "Ideal (Normal Weight)" if idx == 2 else LABEL_MAP[idx]
+
 # ── SILHOUETTE MATPLOTLIB (geometris & klinis) ──────────────
 def draw_human_silhouette(height, weight, gender, idx):
     fig,ax=plt.subplots(figsize=(3.5,5.5))
@@ -370,28 +369,18 @@ with st.sidebar:
 <div style="margin-top:10px">
 <span class="pill" style="color:{c2};border-color:{c2}">{LABEL_ID[bi]}</span>
 </div>
-<p class="card-sub">{LABEL_MAP[bi]}</p>
+<p class="card-sub">{format_sub_label(bi)}</p>
 </div>""", unsafe_allow_html=True)
     il=round(18.5*(height/100)**2); ih=round(24.9*(height/100)**2)
     st.markdown(f"<p class='card-sub' style='margin-top:12px'><b style='color:{TXT_MAIN}'>Berat Ideal:</b> {il}–{ih} kg</p>", unsafe_allow_html=True)
     st.markdown("---")
     predict_btn=st.button("Prediksi IMT",use_container_width=True)
-    if st.button("Log ke MLflow",use_container_width=True,key="btn_mlflow"):
-        try:
-            import mlflow
-            mlflow.set_experiment("BMI_Analyzer_v2_Skripsi")
-            with mlflow.start_run():
-                mlflow.log_params({"gender":gender,"height":height,"weight":weight})
-                mlflow.log_metrics({"bmi":round(bmi_val,2),"category_index":bi})
-            st.sidebar.success("Logged ke MLflow.")
-        except Exception as e:
-            st.sidebar.error(str(e))
 
 # ── HEADER ──────────────────────────────────────────────────
 st.markdown("""
 <div class="page-header">
 <span class="page-eyebrow">Skripsi S1 Informatika · Universitas AMIKOM Yogyakarta</span>
-<h1 class="page-title">BMI Analyzer </h1>
+<h1 class="page-title">BMI Analyzer</h1>
 <p class="page-sub">Klasifikasi kategori IMT melalui simulasi citra biner dan machine learning</p>
 <p class="page-sub" style="margin-top:6px">Satrio Raja Nabil Rizky (23.11.5538)</p>
 </div>
@@ -431,8 +420,14 @@ with t1:
         m1,m2,m3=st.columns(3)
         m1.metric("BMI / IMT",f"{bmi_val:.1f}")
         m2.metric("Kategori (ID)",LABEL_ID[bi])
-        diff=weight-il
-        m3.metric("Gap Ideal",f"{abs(diff):.0f} kg",delta=f"{'Lebih' if diff>0 else 'Kurang'} {abs(diff):.0f} kg",delta_color="inverse" if diff>0 else "off")
+        if weight < il:
+            diff = il - weight
+            m3.metric("Gap Ideal", f"-{diff:.0f} kg", delta=f"Kurang {diff:.0f} kg", delta_color="inverse")
+        elif weight > ih:
+            diff = weight - ih
+            m3.metric("Gap Ideal", f"+{diff:.0f} kg", delta=f"Lebih {diff:.0f} kg", delta_color="inverse")
+        else:
+            m3.metric("Gap Ideal", "0 kg", delta="Sudah Ideal ✓", delta_color="normal")
 
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
         bp=min(max((bmi_val-10)/50*100,0),100)
@@ -458,7 +453,7 @@ with t1:
                 f'<div class="pred-box" style="border-left:3px solid {c3}">'
                 '<p class="pred-title">Prediksi Machine Learning</p>'
                 f'<span class="pill" style="color:{c3};border-color:{c3}">{LABEL_ID[pred]}</span>'
-                f'<span style="margin-left:8px;color:{TXT_MAIN};font-weight:600;font-size:14px">{LABEL_MAP[pred]}</span>'
+                f'<span style="margin-left:8px;color:{TXT_MAIN};font-weight:600;font-size:14px">{format_sub_label(pred)}</span>'
                 f'<p class="pred-meta">Confidence {conf:.1f}% · Model Random Forest (Acc 99.73% pada n=3,700)</p>'
                 '</div>', unsafe_allow_html=True)
         else:
