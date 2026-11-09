@@ -398,17 +398,27 @@ with t3:
 # ═══════════════════════════════════════════════════════════
 with t4:
     st.markdown("### Perbandingan Performa 6 Algoritma Machine Learning")
-    st.markdown("Hasil eksperimen pada dataset gabungan `bmi.csv` · **n = 3,700 sampel** · 3 Skenario Rasio Split · **16 Fitur** (11 Fitur Antropometri + 5 Fitur Morfologi Citra Siluet)")
+    st.markdown("Hasil eksperimen pada dataset gabungan `bmi.csv` · **n = 3,700 sampel** · **5 Skenario Rasio Split (90:10, 80:20, 75:25, 70:30, 60:40)** · **16 Fitur** (11 Fitur Antropometri + 5 Fitur Morfologi Citra Siluet)")
 
     REAL_RESULTS=[
-        {"Model":"Random Forest",    "Acc (80:20)":"99.73%","Acc (75:25)":"99.78%","Acc (70:30)":"99.64%","F1-Score (80:20)":"99.73%"},
-        {"Model":"Gradient Boosting","Acc (80:20)":"99.59%","Acc (75:25)":"99.68%","Acc (70:30)":"99.55%","F1-Score (80:20)":"99.60%"},
-        {"Model":"Decision Tree",    "Acc (80:20)":"99.59%","Acc (75:25)":"99.46%","Acc (70:30)":"99.19%","F1-Score (80:20)":"99.60%"},
-        {"Model":"SVM (RBF)",        "Acc (80:20)":"97.57%","Acc (75:25)":"97.62%","Acc (70:30)":"97.39%","F1-Score (80:20)":"97.54%"},
-        {"Model":"Logistic Reg.",    "Acc (80:20)":"97.03%","Acc (75:25)":"96.86%","Acc (70:30)":"96.94%","F1-Score (80:20)":"96.86%"},
-        {"Model":"KNN",              "Acc (80:20)":"96.49%","Acc (75:25)":"96.65%","Acc (70:30)":"96.58%","F1-Score (80:20)":"96.44%"},
+        {"Model":"Random Forest",    "Acc (90:10)":"99.73%","Acc (80:20)":"99.73%","Acc (75:25)":"99.78%","Acc (70:30)":"99.64%","Acc (60:40)":"99.66%","F1-Score (80:20)":"99.73%"},
+        {"Model":"Gradient Boosting","Acc (90:10)":"99.46%","Acc (80:20)":"99.59%","Acc (75:25)":"99.68%","Acc (70:30)":"99.55%","Acc (60:40)":"99.66%","F1-Score (80:20)":"99.60%"},
+        {"Model":"Decision Tree",    "Acc (90:10)":"99.46%","Acc (80:20)":"99.59%","Acc (75:25)":"99.46%","Acc (70:30)":"99.19%","Acc (60:40)":"99.39%","F1-Score (80:20)":"99.60%"},
+        {"Model":"SVM (RBF)",        "Acc (90:10)":"97.30%","Acc (80:20)":"97.57%","Acc (75:25)":"97.62%","Acc (70:30)":"97.39%","Acc (60:40)":"97.16%","F1-Score (80:20)":"97.54%"},
+        {"Model":"Logistic Reg.",    "Acc (90:10)":"97.57%","Acc (80:20)":"97.03%","Acc (75:25)":"96.86%","Acc (70:30)":"96.94%","Acc (60:40)":"96.89%","F1-Score (80:20)":"96.86%"},
+        {"Model":"KNN",              "Acc (90:10)":"96.22%","Acc (80:20)":"96.49%","Acc (75:25)":"96.65%","Acc (70:30)":"96.58%","Acc (60:40)":"95.34%","F1-Score (80:20)":"96.44%"},
     ]
     st.dataframe(pd.DataFrame(REAL_RESULTS),hide_index=True,use_container_width=True)
+
+    SPLIT_INFO=[
+        {"Skenario Rasio Split":"Eksperimen 1 (90:10)","Data Latih (Train)":"3,330 sampel (90%)","Data Uji (Testing)":"370 sampel (10%)","Akurasi Terbaik (RF)":"99.73%"},
+        {"Skenario Rasio Split":"Eksperimen 2 (80:20)","Data Latih (Train)":"2,960 sampel (80%)","Data Uji (Testing)":"740 sampel (20%)","Akurasi Terbaik (RF)":"99.73%"},
+        {"Skenario Rasio Split":"Eksperimen 3 (75:25)","Data Latih (Train)":"2,775 sampel (75%)","Data Uji (Testing)":"925 sampel (25%)","Akurasi Terbaik (RF)":"99.78%"},
+        {"Skenario Rasio Split":"Eksperimen 4 (70:30)","Data Latih (Train)":"2,590 sampel (70%)","Data Uji (Testing)":"1,110 sampel (30%)","Akurasi Terbaik (RF)":"99.64%"},
+        {"Skenario Rasio Split":"Eksperimen 5 (60:40)","Data Latih (Train)":"2,220 sampel (60%)","Data Uji (Testing)":"1,480 sampel (40%)","Akurasi Terbaik (RF)":"99.66%"},
+    ]
+    with st.expander("📋 Lihat Rincian Pembagian Jumlah Data Train & Testing (5 Varian Split)"):
+        st.dataframe(pd.DataFrame(SPLIT_INFO),hide_index=True,use_container_width=True)
     st.markdown("---")
 
     ca4,cb4=st.columns(2)
