@@ -649,7 +649,7 @@ with t1:
             st.pyplot(fig_s,use_container_width=True); plt.close()
             st.caption("Siluet ini ilustrasi proporsi, bukan representasi wajah atau bentuk tubuh spesifik seseorang.")
 
-        with st.expander("Citra Biner OpenCV & Fitur Morfologi", expanded=False):
+        with st.expander("Citra Biner OpenCV & Fitur Morfologi", expanded=True):
             img_cv = generate_body_silhouette(height, weight, gender)
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_GRAY2RGB)
             cnts, _ = cv2.findContours(img_cv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
