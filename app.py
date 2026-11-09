@@ -1,5 +1,5 @@
 # ============================================================
-# BMI ANALYZER v2 — SKRIPSI EDITION (Modern Minimalism UI)
+# BMI ANALYZER v2 — SKRIPSI EDITION (Modern Dark UI)
 # Klasifikasi Kategori Indeks Massa Tubuh Menggunakan Simulasi
 # Image Processing dan Machine Learning Berbasis Data Antropometri
 # Disusun Oleh: Satrio Raja Nabil Rizky (23.11.5538)
@@ -21,29 +21,31 @@ warnings.filterwarnings("ignore")
 
 # ── CONFIG ──────────────────────────────────────────────────
 st.set_page_config(
-    page_title="BMI Analyzer v2 — Skripsi S1 Informatika",
+    page_title="BMI Analyzer — Skripsi S1 Informatika",
     page_icon="💪",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ── DESIGN TOKENS (Modern Minimalism — Light / Clinical) ────
-BG_APP   = "#F8FAFC"
-BG_CARD  = "#FFFFFF"
-BORDER   = "#E2E8F0"
-TXT_MAIN = "#0F172A"   # Slate 900
-TXT_BODY = "#334155"   # Slate 700
-TXT_SUB  = "#64748B"   # Slate 500
-ACCENT   = "#2563EB"
+# ── DESIGN TOKENS (Modern Dark — Slate) ─────────────────────
+BG_APP   = "#0B0F19"   # latar utama
+BG_CARD  = "#111827"   # kartu & sidebar
+BG_RAISE = "#1F2937"   # elemen yang sedikit lebih terang (track, hover)
+BORDER   = "#1F2937"   # garis tipis
+BORDER_2 = "#334155"   # garis yang lebih terlihat
+TXT_MAIN = "#F1F5F9"   # Slate 100
+TXT_BODY = "#CBD5E1"   # Slate 300
+TXT_SUB  = "#94A3B8"   # Slate 400
+ACCENT   = "#3B82F6"   # Blue 500
 
-# ── GLOBAL MATPLOTLIB STYLE (background putih, teks gelap) ──
+# ── GLOBAL MATPLOTLIB STYLE (dark, selaras dengan kartu) ────
 plt.rcParams.update({
     "figure.facecolor": BG_CARD,
     "axes.facecolor": BG_CARD,
     "savefig.facecolor": BG_CARD,
     "text.color": TXT_MAIN,
     "axes.labelcolor": TXT_BODY,
-    "axes.edgecolor": BORDER,
+    "axes.edgecolor": BORDER_2,
     "xtick.color": TXT_BODY,
     "ytick.color": TXT_BODY,
     "font.family": "sans-serif",
@@ -54,14 +56,14 @@ def style_ax(ax, grid_axis=None):
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
     for s in ("bottom", "left"):
-        ax.spines[s].set_color(BORDER)
+        ax.spines[s].set_color(BORDER_2)
     ax.tick_params(colors=TXT_BODY, labelsize=8)
     if grid_axis:
         ax.set_axisbelow(True)
-        ax.grid(axis=grid_axis, color=BORDER, linestyle="--", linewidth=0.6)
+        ax.grid(axis=grid_axis, color=BORDER_2, linestyle="--", linewidth=0.6, alpha=0.6)
     return ax
 
-# ── CUSTOM CSS (Modern Minimalism — Light) ──────────────────
+# ── CUSTOM CSS (Modern Dark) ────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -69,50 +71,56 @@ st.markdown("""
 html, body, [class*="css"], .stApp {
     font-family: 'Inter', sans-serif !important;
 }
-.stApp { background: #F8FAFC; color: #0F172A; }
-header[data-testid="stHeader"] { background: #F8FAFC; }
+.stApp { background: #0B0F19; color: #F1F5F9; }
+header[data-testid="stHeader"] { background: #0B0F19; }
 .block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1280px; }
 
 /* Sidebar */
 section[data-testid="stSidebar"] {
-    background: #FFFFFF !important;
-    border-right: 1px solid #E2E8F0;
+    background: #111827 !important;
+    border-right: 1px solid #1F2937;
 }
 section[data-testid="stSidebar"] .block-container { padding-top: 1.5rem; }
 
 /* Typography */
-h1, h2, h3, h4 { color: #0F172A !important; font-weight: 700 !important; letter-spacing: -0.01em; }
-.stApp p, .stApp li, .stApp label { color: #334155; }
-.stApp .stCaption, .stApp small { color: #64748B !important; }
+h1, h2, h3, h4 { color: #F1F5F9 !important; font-weight: 700 !important; letter-spacing: -0.01em; }
+.stApp p, .stApp li, .stApp label { color: #CBD5E1; }
+.stApp .stCaption, .stApp small { color: #94A3B8 !important; }
 
 /* Page header */
-.page-header { padding: 0.5rem 0 1.25rem; border-bottom: 1px solid #E2E8F0; margin-bottom: 1.25rem; }
-.page-eyebrow { font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px; }
-.page-title { font-size: 2rem; font-weight: 800; color: #0F172A; margin: 0 0 4px; letter-spacing: -0.02em; }
-.page-sub { font-size: 0.95rem; color: #64748B; margin: 0; }
+.page-header { padding: 0.5rem 0 1.25rem; border-bottom: 1px solid #1F2937; margin-bottom: 1.25rem; }
+.page-eyebrow {
+    display: inline-block; font-size: 11px; font-weight: 600; color: #93C5FD;
+    text-transform: uppercase; letter-spacing: .1em; margin: 0 0 10px;
+    padding: 4px 10px; border-radius: 999px; background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.25);
+}
+.page-title { font-size: 2.1rem; font-weight: 800; color: #F1F5F9; margin: 0 0 6px; letter-spacing: -0.02em; }
+.page-sub { font-size: 0.97rem; color: #94A3B8; margin: 0; }
 
 /* Tabs */
-div[data-baseweb="tab-list"] { gap: 28px; border-bottom: 1px solid #E2E8F0; }
+div[data-baseweb="tab-list"] { gap: 28px; border-bottom: 1px solid #1F2937; }
 button[data-baseweb="tab"] {
-    color: #64748B !important; font-weight: 500; font-size: 14px;
+    color: #94A3B8 !important; font-weight: 500; font-size: 14px;
     padding: 10px 0 12px !important; background: transparent !important;
 }
-button[data-baseweb="tab"][aria-selected="true"] { color: #0F172A !important; font-weight: 600; }
-div[data-baseweb="tab-highlight"] { background: #2563EB !important; height: 2px !important; }
+button[data-baseweb="tab"]:hover { color: #E2E8F0 !important; }
+button[data-baseweb="tab"][aria-selected="true"] { color: #F1F5F9 !important; font-weight: 600; }
+div[data-baseweb="tab-highlight"] { background: #3B82F6 !important; height: 2px !important; }
 
 /* Metric cards */
 div[data-testid="stMetric"], div[data-testid="metric-container"] {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
+    background: #111827;
+    border: 1px solid #1F2937;
     border-radius: 12px;
     padding: 1rem 1.2rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
 div[data-testid="stMetricLabel"] p {
-    color: #64748B !important; font-size: 12px !important; font-weight: 500 !important;
+    color: #94A3B8 !important; font-size: 12px !important; font-weight: 500 !important;
     text-transform: uppercase; letter-spacing: .04em;
 }
-div[data-testid="stMetricValue"] { color: #0F172A !important; font-weight: 700; }
+div[data-testid="stMetricValue"] { color: #F1F5F9 !important; font-weight: 700; }
 
 /* Bordered containers (chart cards) */
 div[data-testid="stVerticalBlockBorderWrapper"] > div > div > div[data-testid="stVerticalBlock"] {
@@ -120,54 +128,49 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div > div > div[data-testid="s
 }
 div[data-testid="stVerticalBlockBorderWrapper"] {
     border-radius: 12px !important;
-    border: 1px solid #E2E8F0 !important;
-    background: #FFFFFF;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    border: 1px solid #1F2937 !important;
+    background: #111827;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
 
 /* Expander */
 div[data-testid="stExpander"] {
-    background: #FFFFFF; border: 1px solid #E2E8F0 !important; border-radius: 12px !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    background: #111827; border: 1px solid #1F2937 !important; border-radius: 12px !important;
 }
+div[data-testid="stExpander"] summary p { color: #E2E8F0 !important; font-weight: 600; }
 
 /* Buttons */
 .stButton > button {
-    background: #0F172A; color: #FFFFFF; border: 1px solid #0F172A;
+    background: #3B82F6; color: #FFFFFF; border: 1px solid #3B82F6;
     border-radius: 10px; font-weight: 600; font-size: 14px;
     padding: 0.55rem 1rem; width: 100%; box-shadow: none;
 }
-.stButton > button:hover { background: #1E293B; border-color: #1E293B; color: #FFFFFF; }
-.stButton > button:focus { box-shadow: none; }
+.stButton > button:hover { background: #2563EB; border-color: #2563EB; color: #FFFFFF; }
+.stButton > button:focus { box-shadow: 0 0 0 3px rgba(59,130,246,0.35); }
+.stButton > button:active { background: #1D4ED8; }
 .st-key-btn_mlflow > div > button {
-    background: #FFFFFF !important; color: #0F172A !important; border: 1px solid #E2E8F0 !important;
+    background: transparent !important; color: #E2E8F0 !important; border: 1px solid #334155 !important;
 }
-.st-key-btn_mlflow > div > button:hover { background: #F8FAFC !important; }
-
-/* Generic card */
-.card {
-    background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;
-    padding: 1.1rem 1.25rem; box-shadow: 0 1px 2px rgba(0,0,0,0.03); margin-bottom: 1rem;
-}
-.card-label { font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 6px; }
-.card-value { font-size: 1.35rem; font-weight: 700; color: #0F172A; margin: 0; }
-.card-sub { font-size: 13px; color: #64748B; margin: 4px 0 0; }
+.st-key-btn_mlflow > div > button:hover { background: #1F2937 !important; border-color: #475569 !important; }
 
 /* Category pill */
 .pill {
     display: inline-block; padding: 3px 10px; border-radius: 999px;
-    font-size: 12px; font-weight: 600; border: 1px solid; background: #FFFFFF;
+    font-size: 12px; font-weight: 600; border: 1px solid; background: transparent;
 }
 
 /* Sidebar BMI card */
 .bmi-card {
-    background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;
-    padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    background: #0B0F19; border: 1px solid #1F2937; border-radius: 12px;
+    padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
+.card-label { font-size: 11px; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 6px; }
+.card-value { font-size: 1.5rem; font-weight: 700; color: #F1F5F9; margin: 0; }
+.card-sub { font-size: 13px; color: #94A3B8; margin: 4px 0 0; }
 
 /* IMT scale */
 .scale-wrap { margin: 0.25rem 0 0.5rem; }
-.scale-label { font-size: 12px; color: #64748B; font-weight: 500; margin: 0 0 8px; }
+.scale-label { font-size: 12px; color: #94A3B8; font-weight: 500; margin: 0 0 10px; }
 .scale-track {
     position: relative; height: 8px; border-radius: 4px;
     background: linear-gradient(to right, #3B82F6, #22C55E, #F59E0B, #EF4444, #7C3AED);
@@ -175,41 +178,42 @@ div[data-testid="stExpander"] {
 .scale-marker {
     position: absolute; top: 50%; transform: translate(-50%, -50%);
     width: 16px; height: 16px; border-radius: 50%;
-    background: #FFFFFF; border: 2px solid #0F172A;
+    background: #0B0F19; border: 2px solid #F1F5F9;
+    box-shadow: 0 0 0 4px rgba(241,245,249,0.08);
 }
-.scale-ticks { display: flex; justify-content: space-between; font-size: 11px; color: #64748B; margin-top: 8px; }
+.scale-ticks { display: flex; justify-content: space-between; font-size: 11px; color: #94A3B8; margin-top: 8px; }
 
 /* Prediction box */
-.pred-box { border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 16px; background: #FFFFFF; }
-.pred-title { font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 8px; }
-.pred-meta { font-size: 12px; color: #64748B; margin: 8px 0 0; }
+.pred-box { border: 1px solid #1F2937; border-radius: 12px; padding: 14px 16px; background: #0B0F19; }
+.pred-title { font-size: 11px; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 8px; }
+.pred-meta { font-size: 12px; color: #94A3B8; margin: 8px 0 0; }
 
 /* Probability bars (Tab 3) */
 .prob-row { margin-bottom: 14px; }
-.prob-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; margin-bottom: 6px; color: #0F172A; }
-.prob-sub { color: #64748B; font-size: 12px; margin-left: 6px; }
+.prob-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; margin-bottom: 6px; color: #F1F5F9; }
+.prob-sub { color: #94A3B8; font-size: 12px; margin-left: 6px; }
 .prob-val { font-weight: 600; }
-.prob-track { height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden; }
+.prob-track { height: 8px; background: #1F2937; border-radius: 4px; overflow: hidden; }
 .prob-fill { height: 100%; border-radius: 4px; }
 
 /* Recommendation */
 .cat-banner {
-    background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;
+    background: #111827; border: 1px solid #1F2937; border-radius: 12px;
     padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
 }
 .cat-banner-title { font-size: 1.3rem; font-weight: 700; margin: 0 0 6px; }
-.cat-banner-meta { font-size: 14px; color: #64748B; margin: 0; }
+.cat-banner-meta { font-size: 14px; color: #94A3B8; margin: 0; }
 .rec-item {
     display: flex; gap: 14px; align-items: flex-start;
-    background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;
-    padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    background: #111827; border: 1px solid #1F2937; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 10px;
 }
 .rec-icon {
-    flex: 0 0 36px; height: 36px; border-radius: 8px; background: #F1F5F9;
+    flex: 0 0 36px; height: 36px; border-radius: 8px; background: #1F2937;
     display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
 }
-.rec-title { font-weight: 600; color: #0F172A; margin: 0 0 4px; font-size: 0.97rem; }
-.rec-desc { color: #64748B; margin: 0; font-size: 0.9rem; line-height: 1.6; }
+.rec-title { font-weight: 600; color: #F1F5F9; margin: 0 0 4px; font-size: 0.97rem; }
+.rec-desc { color: #94A3B8; margin: 0; font-size: 0.9rem; line-height: 1.6; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -386,7 +390,7 @@ with st.sidebar:
 # ── HEADER ──────────────────────────────────────────────────
 st.markdown("""
 <div class="page-header">
-<p class="page-eyebrow">Skripsi S1 Informatika · Universitas AMIKOM Yogyakarta</p>
+<span class="page-eyebrow">Skripsi S1 Informatika · Universitas AMIKOM Yogyakarta</span>
 <h1 class="page-title">BMI Analyzer v2</h1>
 <p class="page-sub">Klasifikasi kategori IMT melalui simulasi citra biner dan machine learning</p>
 <p class="page-sub" style="margin-top:6px">Satrio Raja Nabil Rizky (23.11.5538)</p>
@@ -411,7 +415,7 @@ with t1:
             img_cv = generate_body_silhouette(height, weight, gender)
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_GRAY2RGB)
             cnts, _ = cv2.findContours(img_cv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cv2.drawContours(img_rgb, cnts, -1, (37, 99, 235), 2)
+            cv2.drawContours(img_rgb, cnts, -1, (59, 130, 246), 2)
             st.image(img_rgb, caption="Citra siluet biner OpenCV (128×128 px) dengan kontur", use_container_width=True)
             f_img = extract_image_features(img_cv)
             st.json({
@@ -500,7 +504,7 @@ with t2:
                 st.markdown("#### Distribusi Gender")
                 fig,ax=plt.subplots(figsize=(4,4))
                 gc=df_data["Gender"].value_counts()
-                wedges,texts,autotexts=ax.pie(gc,labels=gc.index,autopct="%1.1f%%",colors=[ACCENT,"#0D9488"],startangle=90,wedgeprops={"edgecolor":BG_CARD,"linewidth":2},textprops={"color":TXT_BODY})
+                wedges,texts,autotexts=ax.pie(gc,labels=gc.index,autopct="%1.1f%%",colors=[ACCENT,"#14B8A6"],startangle=90,wedgeprops={"edgecolor":BG_CARD,"linewidth":2},textprops={"color":TXT_BODY})
                 for a in autotexts: a.set_color("#FFFFFF"); a.set_fontweight("bold")
                 ax.set_facecolor(BG_CARD)
                 st.pyplot(fig,use_container_width=True); plt.close()
@@ -511,9 +515,9 @@ with t2:
             style_ax(ax,grid_axis="both")
             for idx2 in sorted(df_data["Index"].unique()):
                 sub=df_data[df_data["Index"]==idx2]
-                ax.scatter(sub["Height"],sub["Weight"],c=CAT_COLORS[idx2],label=label_map_en[idx2],alpha=0.7,s=28,edgecolors="none")
+                ax.scatter(sub["Height"],sub["Weight"],c=CAT_COLORS[idx2],label=label_map_en[idx2],alpha=0.75,s=28,edgecolors="none")
             ax.set_xlabel("Tinggi Badan (cm)"); ax.set_ylabel("Berat Badan (kg)")
-            ax.legend(fontsize=8,labelcolor=TXT_BODY,facecolor=BG_CARD,edgecolor=BORDER)
+            ax.legend(fontsize=8,labelcolor=TXT_BODY,facecolor=BG_RAISE,edgecolor=BORDER_2)
             st.pyplot(fig,use_container_width=True); plt.close()
 
         st.markdown("#### Preview Dataset (15 Baris Pertama)")
@@ -612,7 +616,7 @@ with t4:
             style_ax(ax,grid_axis="x")
             nms=["Random Forest","Gradient Boosting","Decision Tree","SVM (RBF)","Logistic Reg.","KNN"]
             acs=[99.73,99.59,99.59,97.57,97.03,96.49]
-            cls_c=[("#0D9488" if a>=99.5 else ACCENT if a>=97 else "#F59E0B") for a in acs]
+            cls_c=[("#14B8A6" if a>=99.5 else ACCENT if a>=97 else "#F59E0B") for a in acs]
             brs=ax.barh(nms[::-1],acs[::-1],color=cls_c[::-1],alpha=0.9,edgecolor=BG_CARD,linewidth=0.5)
             for b,v in zip(brs,acs[::-1]): ax.text(v+0.15,b.get_y()+b.get_height()/2,f"{v:.2f}%",ha="left",va="center",color=TXT_MAIN,fontsize=9)
             ax.set_xlim(90,102); ax.set_xlabel("Accuracy (%)")
@@ -627,11 +631,11 @@ with t4:
             style_ax(ax,grid_axis="x")
             img_feats_names=["aspect_ratio","pixel_area","body_density","contour_perimeter","compactness"]
             fn=[f[0] for f in FEAT_IMP]; fi=[f[1] for f in FEAT_IMP]
-            clrs2=[("#DC2626" if f in img_feats_names else ACCENT) for f in fn]
+            clrs2=[("#F87171" if f in img_feats_names else ACCENT) for f in fn]
             ax.barh(fn[::-1],fi[::-1],color=clrs2[::-1],alpha=0.9,edgecolor=BG_CARD,linewidth=0.5)
             ax.set_xlabel("Importance (%)"); ax.tick_params(labelsize=8)
-            red_p=mpatches.Patch(color="#DC2626",label="Fitur Citra Siluet"); blue_p=mpatches.Patch(color=ACCENT,label="Fitur Antropometri")
-            ax.legend(handles=[red_p,blue_p],fontsize=8,labelcolor=TXT_BODY,facecolor=BG_CARD,edgecolor=BORDER)
+            red_p=mpatches.Patch(color="#F87171",label="Fitur Citra Siluet"); blue_p=mpatches.Patch(color=ACCENT,label="Fitur Antropometri")
+            ax.legend(handles=[red_p,blue_p],fontsize=8,labelcolor=TXT_BODY,facecolor=BG_RAISE,edgecolor=BORDER_2)
             plt.tight_layout(); st.pyplot(fig,use_container_width=True); plt.close()
 
     if model_loaded:
@@ -665,7 +669,7 @@ with t4:
                 st.markdown("#### Confusion Matrix — Random Forest (Split 80:20)")
                 fig,ax=plt.subplots(figsize=(8,5.5))
                 tnames=["Ext.Weak","Weak","Normal","Overweight","Obesity","Ext.Obesity"]
-                sns.heatmap(cm_mat,annot=True,fmt="d",cmap="Blues",ax=ax,xticklabels=tnames,yticklabels=tnames,linewidths=0.5,linecolor="#E2E8F0")
+                sns.heatmap(cm_mat,annot=True,fmt="d",cmap="Blues",ax=ax,xticklabels=tnames,yticklabels=tnames,linewidths=0.5,linecolor="#1F2937")
                 ax.set_xlabel("Predicted Label"); ax.set_ylabel("Actual Label")
                 ax.tick_params(colors=TXT_BODY,labelsize=8); ax.tick_params(axis="x",rotation=25)
                 ax.set_title("Confusion Matrix — Random Forest (Data Uji 20% = 740 Sampel)",color=TXT_MAIN,fontsize=11)
