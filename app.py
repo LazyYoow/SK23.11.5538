@@ -1,5 +1,5 @@
 # ============================================================
-# BMI ANALYZER v2 — SKRIPSI EDITION (Modern Dark UI)
+# BMI ANALYZER  — SKRIPSI EDITION (Modern Dark UI)
 # Klasifikasi Kategori Indeks Massa Tubuh Menggunakan Simulasi
 # Image Processing dan Machine Learning Berbasis Data Antropometri
 # Disusun Oleh: Satrio Raja Nabil Rizky (23.11.5538)
@@ -391,7 +391,7 @@ with st.sidebar:
 st.markdown("""
 <div class="page-header">
 <span class="page-eyebrow">Skripsi S1 Informatika · Universitas AMIKOM Yogyakarta</span>
-<h1 class="page-title">BMI Analyzer v2</h1>
+<h1 class="page-title">BMI Analyzer </h1>
 <p class="page-sub">Klasifikasi kategori IMT melalui simulasi citra biner dan machine learning</p>
 <p class="page-sub" style="margin-top:6px">Satrio Raja Nabil Rizky (23.11.5538)</p>
 </div>
