@@ -1,10 +1,7 @@
-# ============================================================
-# BMI ANALYZER — SKRIPSI EDITION (Elegant Dark UI · Interaktif)
-# Klasifikasi Kategori Indeks Massa Tubuh Menggunakan Simulasi
+# BMI Analyzer: Klasifikasi Kategori Indeks Massa Tubuh Menggunakan Simulasi
 # Image Processing dan Machine Learning Berbasis Data Antropometri
-# Disusun Oleh: Satrio Raja Nabil Rizky (23.11.5538)
+# Disusun oleh: Satrio Raja Nabil Rizky (23.11.5538)
 # Dosen Pembimbing: Mulia Sulistiyono, S.Kom., M.Kom.
-# ============================================================
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -16,11 +13,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import Ellipse
 import seaborn as sns
-import io, warnings
+import warnings
 from datetime import datetime, timedelta, timezone
 warnings.filterwarnings("ignore")
 
-# Zona waktu GMT+7 (WIB). Fallback jika tzdata tidak tersedia.
+# Zona waktu GMT+7 (WIB), fallback jika tzdata tidak tersedia.
 try:
     from zoneinfo import ZoneInfo
     WIB = ZoneInfo("Asia/Jakarta")
@@ -37,17 +34,13 @@ def fmt_hari_tanggal(dt):
 def fmt_waktu_riwayat(dt):
     return f"{dt.day:02d}/{dt.month:02d}/{dt.year} {dt:%H:%M:%S}"
 
-warnings.filterwarnings("ignore")
-
-# ── CONFIG ──────────────────────────────────────────────────
 st.set_page_config(
-    page_title="BMI Analyzer — Skripsi S1 Informatika",
-    page_icon="💪",
+    page_title="BMI Analyzer | Skripsi S1 Informatika",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ── DESIGN TOKENS (Elegant Dark — Indigo) ───────────────────
+# Token warna permukaan dan tipografi (kontras terverifikasi >= 4.5:1 WCAG AA)
 BG_APP   = "#09090E"
 BG_SIDE  = "#0E0E15"
 BG_CARD  = "#12121A"
@@ -57,12 +50,11 @@ BORDER_2 = "#34343F"
 TXT_MAIN = "#F5F3EE"
 TXT_BODY = "#D6D3CC"
 TXT_SUB  = "#8E8B99"
-ACCENT      = "#818CF8"   # indigo 400 (aksen utama, pengganti emas)
-ACCENT_HI   = "#A5B4FC"   # indigo 300 (highlight)
-ACCENT_DEEP = "#6366F1"   # indigo 500 (gradasi tombol)
-ACCENT_2    = "#7DD3C0"   # sage teal (aksen kedua)
+ACCENT      = "#818CF8"
+ACCENT_HI   = "#A5B4FC"
+ACCENT_DEEP = "#4F46E5"
+ACCENT_2    = "#7DD3C0"
 
-# ── GLOBAL MATPLOTLIB STYLE ─────────────────────────────────
 plt.rcParams.update({
     "figure.facecolor": BG_CARD,
     "axes.facecolor": BG_CARD,
@@ -87,7 +79,6 @@ def style_ax(ax, grid_axis=None):
         ax.grid(axis=grid_axis, color=BORDER, linestyle="-", linewidth=0.6, alpha=0.9)
     return ax
 
-# ── SESSION STATE ───────────────────────────────────────────
 if "riwayat" not in st.session_state:
     st.session_state.riwayat = []
 if "aff_idx" not in st.session_state:
@@ -95,7 +86,6 @@ if "aff_idx" not in st.session_state:
 if "last_idx" not in st.session_state:
     st.session_state.last_idx = None
 
-# ── CUSTOM CSS (Elegant Dark — Indigo) ──────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
@@ -104,17 +94,25 @@ html, body, [class*="css"], .stApp {
     font-family: 'Inter', sans-serif !important;
 }
 .stApp {
-    background:
-        radial-gradient(1200px 600px at 75% -10%, rgba(129,140,248,0.08), transparent 60%),
-        radial-gradient(900px 500px at -10% 110%, rgba(125,211,192,0.05), transparent 60%),
-        #09090E;
+    background: #09090E;
     color: #F5F3EE;
 }
 header[data-testid="stHeader"] { background: transparent; }
 .block-container { padding-top: 2.2rem; padding-bottom: 3.5rem; max-width: 1280px; }
 
+a[href], button, summary, select, label, [role="button"], [role="tab"] {
+    cursor: pointer;
+}
+button:disabled, [aria-disabled="true"] {
+    cursor: not-allowed;
+}
+button:focus-visible, a:focus-visible, summary:focus-visible, [role="tab"]:focus-visible {
+    outline: 2px solid #A5B4FC !important;
+    outline-offset: 2px !important;
+}
+
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0F0F17 0%, #0B0B11 100%) !important;
+    background: #0E0E15 !important;
     border-right: 1px solid #23232F;
 }
 section[data-testid="stSidebar"] .block-container { padding-top: 1.75rem; }
@@ -128,47 +126,42 @@ h4 { font-weight: 600 !important; font-size: 1.05rem !important; color: #F5F3EE 
 .stApp p, .stApp li, .stApp label { color: #D6D3CC; }
 .stApp .stCaption, .stApp small { color: #8E8B99 !important; }
 
-.page-header { position: relative; padding: 0.25rem 0 1.75rem; margin-bottom: 1.5rem; }
-.page-header::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
-    background: linear-gradient(90deg, rgba(129,140,248,0.6), rgba(129,140,248,0.08) 60%, transparent);
+.page-header {
+    position: relative; padding: 0.25rem 0 1.5rem; margin-bottom: 1.5rem;
+    border-bottom: 1px solid #23232F;
 }
-.page-eyebrow {
-    display: inline-flex; align-items: center; gap: 10px;
-    font-size: 11px; font-weight: 600; color: #A5B4FC;
-    text-transform: uppercase; letter-spacing: .22em; margin: 0 0 14px;
+.page-meta {
+    font-size: 0.82rem; font-weight: 500; color: #A5B4FC;
+    letter-spacing: .04em; margin: 0 0 8px;
 }
-.page-eyebrow::before { content: ""; width: 28px; height: 1px; background: #818CF8; }
 .page-title {
     font-family: 'Playfair Display', serif !important;
-    font-size: 3rem; font-weight: 600; line-height: 1.1; margin: 0 0 10px;
-    background: linear-gradient(115deg, #F5F3EE 25%, #A5B4FC 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; line-height: 1.12;
+    margin: 0 0 10px; color: #F5F3EE;
 }
-.page-sub { font-size: 0.98rem; color: #8E8B99; margin: 0; font-weight: 300; letter-spacing: .01em; }
-.page-author { font-size: 0.85rem; color: #D6D3CC; margin: 14px 0 0; font-weight: 400; }
+.page-sub { font-size: 0.98rem; color: #D6D3CC; margin: 0; font-weight: 400; }
+.page-author { font-size: 0.85rem; color: #8E8B99; margin: 10px 0 0; font-weight: 400; }
 
-div[data-baseweb="tab-list"] { gap: 34px; border-bottom: 1px solid #1E1E28; }
+div[data-baseweb="tab-list"] { gap: 28px; border-bottom: 1px solid #23232F; flex-wrap: wrap; }
 button[data-baseweb="tab"] {
-    color: #8E8B99 !important; font-weight: 400; font-size: 13.5px; letter-spacing: .02em;
-    padding: 12px 0 14px !important; background: transparent !important;
-    transition: color .2s ease;
+    color: #8E8B99 !important; font-weight: 400; font-size: 13.5px; letter-spacing: .01em;
+    padding: 12px 4px 14px !important; min-height: 44px; background: transparent !important;
+    transition: color .15s ease;
 }
 button[data-baseweb="tab"]:hover { color: #F5F3EE !important; }
-button[data-baseweb="tab"][aria-selected="true"] { color: #F5F3EE !important; font-weight: 500; }
+button[data-baseweb="tab"][aria-selected="true"] { color: #F5F3EE !important; font-weight: 600; }
 div[data-baseweb="tab-highlight"] {
-    background: linear-gradient(90deg, #6366F1, #A5B4FC) !important; height: 1.5px !important;
+    background: #818CF8 !important; height: 2px !important;
 }
 
 div[data-testid="stMetric"], div[data-testid="metric-container"] {
-    background: linear-gradient(180deg, #15151E 0%, #0F0F16 100%);
-    border: 1px solid #23232F; border-radius: 16px;
+    background: #12121A;
+    border: 1px solid #23232F; border-radius: 12px;
     padding: 1.1rem 1.3rem 1.2rem;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025), 0 18px 40px -24px rgba(0,0,0,0.8);
 }
 div[data-testid="stMetricLabel"] p {
     color: #8E8B99 !important; font-size: 11px !important; font-weight: 500 !important;
-    text-transform: uppercase; letter-spacing: .14em;
+    text-transform: uppercase; letter-spacing: .08em;
 }
 div[data-testid="stMetricValue"] {
     color: #F5F3EE !important; font-weight: 500;
@@ -177,48 +170,47 @@ div[data-testid="stMetricValue"] {
 
 div[data-testid="stVerticalBlockBorderWrapper"] > div > div > div[data-testid="stVerticalBlock"] { gap: 0.8rem; }
 div[data-testid="stVerticalBlockBorderWrapper"] {
-    border-radius: 16px !important; border: 1px solid #23232F !important;
-    background: linear-gradient(180deg, #14141D 0%, #0F0F16 100%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025), 0 18px 40px -26px rgba(0,0,0,0.85);
+    border-radius: 12px !important; border: 1px solid #23232F !important;
+    background: #12121A;
     padding: 0.4rem 0.6rem;
 }
 
 div[data-testid="stExpander"] {
-    background: linear-gradient(180deg, #14141D 0%, #0F0F16 100%);
-    border: 1px solid #23232F !important; border-radius: 16px !important;
+    background: #12121A;
+    border: 1px solid #23232F !important; border-radius: 12px !important;
 }
-div[data-testid="stExpander"] summary p { color: #E7E4DC !important; font-weight: 500; }
+div[data-testid="stExpander"] summary { min-height: 44px; display: flex; align-items: center; }
+div[data-testid="stExpander"] summary p { color: #F5F3EE !important; font-weight: 500; }
 
-/* Tombol utama: indigo, teks putih (kontras jelas) */
-.stButton > button {
-    background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%);
-    color: #FFFFFF !important; border: 0; border-radius: 12px;
-    font-weight: 600; font-size: 13.5px; letter-spacing: .02em;
-    padding: 0.6rem 1rem; width: 100%;
-    box-shadow: 0 10px 24px -12px rgba(99,102,241,0.6);
-    transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+/* Tombol utama: kontras #FFFFFF di atas #4F46E5 = 6.29:1 (lulus WCAG AA) */
+.stButton > button, .stDownloadButton > button {
+    background: #4F46E5;
+    color: #FFFFFF !important; border: 1px solid #6366F1; border-radius: 10px;
+    font-weight: 600; font-size: 13.5px; letter-spacing: .01em;
+    padding: 0.6rem 1rem; min-height: 44px; width: 100%;
+    transition: background-color .15s ease, border-color .15s ease;
 }
-.stButton > button:hover {
-    color: #FFFFFF !important; filter: brightness(1.08); transform: translateY(-1px);
-    box-shadow: 0 14px 28px -12px rgba(99,102,241,0.75);
+.stButton > button:hover, .stDownloadButton > button:hover {
+    background: #4338CA; border-color: #818CF8; color: #FFFFFF !important;
 }
-.stButton > button:active { transform: translateY(0); }
-.stButton > button:focus { box-shadow: 0 0 0 3px rgba(129,140,248,0.35); }
-/* Tombol sekunder (Hapus riwayat) */
+.stButton > button:active, .stDownloadButton > button:active {
+    background: #3730A3;
+}
 .st-key-clear_hist > div > button {
-    background: transparent !important; color: #E7E4DC !important;
-    border: 1px solid #34343F !important; box-shadow: none !important;
+    background: transparent !important; color: #F5F3EE !important;
+    border: 1px solid #34343F !important;
 }
-.st-key-clear_hist > div > button:hover { border-color: #818CF8 !important; color: #A5B4FC !important; }
+.st-key-clear_hist > div > button:hover {
+    background: #1A1A24 !important; border-color: #818CF8 !important; color: #A5B4FC !important;
+}
 
 .bmi-card {
-    background: linear-gradient(180deg, #17171F 0%, #101018 100%);
-    border: 1px solid #26262F; border-radius: 16px; padding: 16px 18px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    background: #12121A;
+    border: 1px solid #23232F; border-radius: 12px; padding: 16px 18px;
 }
 .card-label {
-    font-size: 10.5px; font-weight: 500; color: #8E8B99;
-    text-transform: uppercase; letter-spacing: .16em; margin: 0 0 8px;
+    font-size: 11px; font-weight: 500; color: #8E8B99;
+    text-transform: uppercase; letter-spacing: .08em; margin: 0 0 8px;
 }
 .card-value {
     font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 500;
@@ -227,87 +219,84 @@ div[data-testid="stExpander"] summary p { color: #E7E4DC !important; font-weight
 .card-sub { font-size: 12.5px; color: #8E8B99; margin: 6px 0 0; }
 
 .pill {
-    display: inline-block; padding: 4px 11px; border-radius: 999px;
-    font-size: 11.5px; font-weight: 500; letter-spacing: .03em;
-    border: 1px solid; background: rgba(255,255,255,0.02);
+    display: inline-block; padding: 4px 10px; border-radius: 6px;
+    font-size: 11.5px; font-weight: 600; letter-spacing: .02em;
+    border: 1px solid; background: rgba(255,255,255,0.03);
 }
 
 .scale-wrap { margin: 0.25rem 0 0.5rem; }
 .scale-label {
-    font-size: 10.5px; color: #8E8B99; font-weight: 500;
-    text-transform: uppercase; letter-spacing: .16em; margin: 0 0 14px;
+    font-size: 11px; color: #8E8B99; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .08em; margin: 0 0 14px;
 }
 .scale-track {
-    position: relative; height: 4px; border-radius: 4px;
+    position: relative; height: 6px; border-radius: 3px;
     background: linear-gradient(90deg, #60A5FA 0%, #4ADE80 28%, #FBBF24 52%, #F87171 76%, #A78BFA 100%);
-    opacity: 0.9;
 }
 .scale-marker {
     position: absolute; top: 50%; transform: translate(-50%, -50%);
     width: 18px; height: 18px; border-radius: 50%;
-    background: #09090E; border: 1.5px solid #A5B4FC;
-    box-shadow: 0 0 0 5px rgba(129,140,248,0.15), 0 0 18px rgba(129,140,248,0.4);
-    transition: left .45s cubic-bezier(.2,.8,.2,1);
+    background: #09090E; border: 2px solid #F5F3EE;
+    box-shadow: 0 0 0 4px rgba(129,140,248,0.28);
+    transition: left .3s ease;
 }
 .scale-ticks {
-    display: flex; justify-content: space-between; font-size: 10.5px;
-    color: #8E8B99; margin-top: 12px; letter-spacing: .04em;
+    display: flex; justify-content: space-between; font-size: 11px;
+    color: #8E8B99; margin-top: 12px;
 }
 
 .pred-box {
-    border: 1px solid #23232F; border-radius: 16px; padding: 18px 20px;
-    background: linear-gradient(180deg, #15151E 0%, #0E0E15 100%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+    border: 1px solid #23232F; border-radius: 12px; padding: 18px 20px;
+    background: #12121A;
 }
 .pred-title {
-    font-size: 10.5px; font-weight: 500; color: #8E8B99;
-    text-transform: uppercase; letter-spacing: .16em; margin: 0 0 12px;
+    font-size: 11px; font-weight: 500; color: #8E8B99;
+    text-transform: uppercase; letter-spacing: .08em; margin: 0 0 12px;
 }
-.pred-meta { font-size: 12px; color: #8E8B99; margin: 12px 0 0; line-height: 1.6; }
+.pred-meta { font-size: 12.5px; color: #8E8B99; margin: 12px 0 0; line-height: 1.6; }
 
 .prob-row { margin-bottom: 18px; }
 .prob-head {
     display: flex; justify-content: space-between; align-items: baseline;
     font-size: 14px; margin-bottom: 9px; color: #F5F3EE;
 }
-.prob-sub { color: #8E8B99; font-size: 12px; margin-left: 8px; font-weight: 300; }
+.prob-sub { color: #8E8B99; font-size: 12px; margin-left: 8px; font-weight: 400; }
 .prob-val { font-weight: 500; font-family: 'Playfair Display', serif; font-size: 1.05rem; }
-.prob-track { height: 6px; background: #1C1C26; border-radius: 6px; overflow: hidden; }
-.prob-fill { height: 100%; border-radius: 6px; transition: width .5s ease; }
+.prob-track { height: 6px; background: #1C1C26; border-radius: 4px; overflow: hidden; }
+.prob-fill { height: 100%; border-radius: 4px; transition: width .35s ease; }
 
 .cat-banner {
-    background: linear-gradient(135deg, #161621 0%, #0F0F16 100%);
-    border: 1px solid #23232F; border-radius: 16px;
-    padding: 1.5rem 1.75rem; margin-bottom: 1.4rem;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+    background: #12121A;
+    border: 1px solid #23232F; border-radius: 12px;
+    padding: 1.4rem 1.6rem; margin-bottom: 1.4rem;
 }
-.cat-banner-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 500; margin: 0 0 8px; }
+.cat-banner-title { font-family: 'Playfair Display', serif; font-size: 1.55rem; font-weight: 500; margin: 0 0 8px; }
 .cat-banner-meta { font-size: 13.5px; color: #8E8B99; margin: 0; }
 .rec-item {
     display: flex; gap: 16px; align-items: flex-start;
-    background: linear-gradient(180deg, #14141D 0%, #0F0F16 100%);
-    border: 1px solid #23232F; border-radius: 14px;
+    background: #12121A;
+    border: 1px solid #23232F; border-radius: 10px;
     padding: 16px 18px; margin-bottom: 4px;
 }
-.rec-icon {
-    flex: 0 0 38px; height: 38px; border-radius: 11px; background: #1A1A24;
-    border: 1px solid #2A2A36;
-    display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+.rec-num {
+    flex: 0 0 36px; height: 36px; border-radius: 8px; background: #1A1A24;
+    border: 1px solid #34343F; color: #A5B4FC;
+    font-family: 'Playfair Display', serif; font-weight: 600; font-size: 0.95rem;
+    display: flex; align-items: center; justify-content: center;
 }
 .rec-title { font-weight: 500; color: #F5F3EE; margin: 0 0 5px; font-size: 0.97rem; }
-.rec-desc { color: #8E8B99; margin: 0; font-size: 0.89rem; line-height: 1.65; font-weight: 300; }
+.rec-desc { color: #D6D3CC; margin: 0; font-size: 0.89rem; line-height: 1.6; font-weight: 400; }
 
 .aff-text {
-    font-family: 'Playfair Display', serif; font-size: 1.3rem; font-style: italic;
+    font-family: 'Playfair Display', serif; font-size: 1.25rem; font-style: italic;
     color: #F5F3EE; line-height: 1.6; margin: 6px 0 0;
 }
 .aff-note { font-size: 12px; color: #8E8B99; margin-top: 10px; }
 
-/* Jam real-time */
 .clock {
     display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
-    background: linear-gradient(180deg, #15151E 0%, #0F0F16 100%);
-    border: 1px solid #23232F; border-radius: 12px; padding: 10px 14px;
+    background: #12121A;
+    border: 1px solid #23232F; border-radius: 10px; padding: 10px 14px;
     font-size: 13px; color: #D6D3CC; margin-bottom: 12px;
 }
 .clock b {
@@ -316,28 +305,33 @@ div[data-testid="stExpander"] summary p { color: #E7E4DC !important; font-weight
 }
 .clock-dot {
     width: 8px; height: 8px; border-radius: 50%; background: #4ADE80;
-    box-shadow: 0 0 0 0 rgba(74,222,128,.6); animation: pulse 1.6s infinite;
-}
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(74,222,128,.55); }
-    70% { box-shadow: 0 0 0 8px rgba(74,222,128,0); }
-    100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
 }
 .clock-tz {
-    margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: .12em;
-    color: #7DD3C0; border: 1px solid rgba(125,211,192,.35); border-radius: 999px; padding: 3px 9px;
+    margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: .08em;
+    color: #7DD3C0; border: 1px solid rgba(125,211,192,.35); border-radius: 6px; padding: 3px 9px;
 }
 
-div[data-testid="stDataFrame"] { border: 1px solid #23232F; border-radius: 14px; overflow: hidden; }
+div[data-testid="stDataFrame"] { border: 1px solid #23232F; border-radius: 10px; overflow: hidden; }
 
 .gold-rule {
-    height: 1px; border: 0; margin: 1.6rem 0;
-    background: linear-gradient(90deg, transparent, rgba(129,140,248,0.4), transparent);
+    height: 1px; border: 0; margin: 1.5rem 0;
+    background: #23232F;
+}
+
+@media (max-width: 768px) {
+    .block-container { padding-top: 1.25rem; padding-bottom: 2rem; }
+    div[data-baseweb="tab-list"] { gap: 14px; }
+    .clock-tz { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ── CONSTANTS ──────────────────────────────────────────────
 LABEL_MAP   = {0:"Extremely Weak",1:"Weak",2:"Normal",3:"Overweight",4:"Obesity",5:"Extreme Obesity"}
 LABEL_ID    = {0:"Sangat Kurus",  1:"Kurus",  2:"Normal", 3:"Overweight",4:"Obesitas",5:"Sangat Obesitas"}
 CAT_COLORS  = ["#60A5FA","#4ADE80","#7DD3C0","#FBBF24","#F87171","#A78BFA"]
@@ -345,34 +339,34 @@ CAT_BG      = ["#1e3a5f","#14532d","#065f46","#78350f","#7f1d1d","#3b0764"]
 
 RECOMMENDATIONS = {
     0:{"title":"Perlu Perhatian Ekstra","color":"#60A5FA","items":[
-        ("🥗","Perbanyak Kalori Bergizi","Makanan padat nutrisi: kacang, alpukat, nasi merah, protein hewani berkualitas."),
-        ("🏋️","Latihan Pembentuk Otot","Latihan beban 3×/minggu. Target massa otot bukan sekadar angka timbangan."),
-        ("🩺","Konsultasi Dokter Gizi","BMI sangat rendah bisa menandakan kondisi medis tersembunyi."),
-        ("😴","Tidur 7–9 Jam Cukup","Tidur berkualitas mendukung hormon pertumbuhan & nafsu makan.")]},
+        ("01","Perbanyak Kalori Bergizi","Makanan padat nutrisi: kacang, alpukat, nasi merah, protein hewani berkualitas."),
+        ("02","Latihan Pembentuk Otot","Latihan beban 3×/minggu. Target massa otot bukan sekadar angka timbangan."),
+        ("03","Konsultasi Dokter Gizi","BMI sangat rendah bisa menandakan kondisi medis tersembunyi."),
+        ("04","Tidur 7–9 Jam Cukup","Tidur berkualitas mendukung hormon pertumbuhan dan nafsu makan.")]},
     1:{"title":"Tingkatkan Nutrisi","color":"#4ADE80","items":[
-        ("🍳","Protein & Karbohidrat Kompleks","Target 1.5–2g protein/kg BB. Makan 5–6 kali porsi kecil per hari."),
-        ("🚴","Olahraga Ringan Rutin","30 menit jalan cepat atau bersepeda per hari. Bangun metabolisme."),
-        ("🧘","Kelola Stres","Stres menekan nafsu makan. Meditasi 10 menit/hari sangat membantu.")]},
+        ("01","Protein & Karbohidrat Kompleks","Target 1.5–2g protein/kg BB. Makan 5–6 kali porsi kecil per hari."),
+        ("02","Olahraga Ringan Rutin","30 menit jalan cepat atau bersepeda per hari untuk membangun metabolisme."),
+        ("03","Kelola Stres","Stres menekan nafsu makan. Latihan pernapasan atau relaksasi 10 menit/hari membantu.")]},
     2:{"title":"Pertahankan Pola Hidup Sehat","color":"#7DD3C0","items":[
-        ("🎯","Kamu Sudah di Jalur Tepat!","BMI ideal! Pertahankan pola makan seimbang dan olahraga rutin."),
-        ("❤️","Olahraga Rutin & Gizi Seimbang","150 menit aktivitas sedang/minggu. Perbanyak sayur, buah, protein."),
-        ("🔄","Cek Rutin 3–6 Bulan","Monitor BMI periodik. Perubahan kecil lebih mudah ditangani dini."),
-        ("💧","Hidrasi Optimal","2–2.5 liter air/hari. Kurangi minuman manis dan soda.")]},
+        ("01","Jaga Konsistensi Pola Makan","BMI berada di rentang ideal. Pertahankan komposisi gizi seimbang dan jadwal makan teratur."),
+        ("02","Olahraga Rutin & Gizi Seimbang","150 menit aktivitas sedang/minggu. Perbanyak sayur, buah, dan protein."),
+        ("03","Cek Rutin 3–6 Bulan","Monitor BMI secara periodik agar perubahan kecil lebih mudah ditangani sejak dini."),
+        ("04","Hidrasi Optimal","2–2.5 liter air/hari. Batasi minuman berpemanis tambahan.")]},
     3:{"title":"Kendalikan Berat Badan","color":"#FBBF24","items":[
-        ("🚶","Mulai Aktif Sekarang","10.000 langkah/hari atau 45 menit cardio. Gunakan tangga lebih sering."),
-        ("🥗","Kurangi Gula & Gorengan","Ganti dengan whole food. Biasakan membaca label nutrisi sebelum beli."),
-        ("📊","Defisit Kalori Aman","300–500 kkal/hari = turun 0.3–0.5 kg/minggu secara berkelanjutan."),
-        ("😴","Perbaiki Kualitas Tidur","Kurang tidur naikkan hormon lapar. Target 7–9 jam/malam.")]},
+        ("01","Tingkatkan Aktivitas Harian","Targetkan 8.000–10.000 langkah/hari atau 45 menit latihan kardio teratur."),
+        ("02","Kurangi Gula & Gorengan","Utamakan bahan pangan utuh dan periksa label nutrisi sebelum membeli."),
+        ("03","Defisit Kalori Terukur","Defisit 300–500 kkal/hari mendukung penurunan 0.3–0.5 kg/minggu secara bertahap."),
+        ("04","Perbaiki Kualitas Tidur","Kurang tidur meningkatkan hormon ghrelin pemicu lapar. Targetkan 7–9 jam/malam.")]},
     4:{"title":"Prioritaskan Kesehatan","color":"#F87171","items":[
-        ("🏥","Konsultasi Dokter Segera","Obesitas tingkatkan risiko diabetes, hipertensi, penyakit jantung."),
-        ("🏊","Olahraga Rendah Benturan","Renang atau sepeda statis aman untuk sendi. Mulai 20 menit/hari."),
-        ("🥦","Diet Terstruktur","Hindari crash diet. Makan 3×/hari porsi terkontrol, banyak serat."),
-        ("👥","Dukungan Sosial","Bergabung komunitas kesehatan. Konsistensi lebih penting dari sempurna.")]},
-    5:{"title":"Tindakan Segera Diperlukan","color":"#A78BFA","items":[
-        ("🏥","Program Medis Profesional","BMI >40: intervensi medis mendesak. Hubungi dokter spesialis obesitas."),
-        ("❤️","Monitor Tekanan Darah","Cek rutin. Target <120/80 mmHg. Kurangi garam & makanan olahan."),
-        ("🚶","Mulai dari Langkah Kecil","Berjalan 10 menit 3×/hari sudah bermakna klinis. Tingkatkan perlahan."),
-        ("🧠","Dukungan Psikologis","Konseling perilaku makan membantu atasi akar hubungan emosi-makanan.")]}
+        ("01","Konsultasi Dokter atau Ahli Gizi","Evaluasi profil metabolik untuk mencegah risiko diabetes, hipertensi, dan penyakit kardiovaskular."),
+        ("02","Olahraga Rendah Benturan","Renang, jalan kaki, atau sepeda statis lebih aman bagi persendian. Mulai 20 menit/hari."),
+        ("03","Pola Makan Terstruktur","Hindari diet ekstrem. Terapkan 3 kali makan utama dengan porsi serat dan protein terukur."),
+        ("04","Dukungan Lingkungan","Libatkan keluarga atau komunitas sehat agar perubahan kebiasaan bertahan jangka panjang.")]},
+    5:{"title":"Pendampingan Medis Diperlukan","color":"#A78BFA","items":[
+        ("01","Program Medis Terpadu","BMI di atas 40 memerlukan supervisi dokter dan ahli gizi untuk perencanaan yang aman."),
+        ("02","Pemantauan Tekanan Darah & Gula Darah","Lakukan pemeriksaan berkala dan kurangi asupan natrium serta pangan ultra-proses."),
+        ("03","Aktivitas Fisik Bertahap","Mulai dengan berjalan ringan 10 menit 3×/hari, lalu tingkatkan sesuai toleransi tubuh."),
+        ("04","Pendampingan Perilaku Makan","Konseling membantu mengelola pola makan emosional secara berkelanjutan.")]}
 }
 
 AFFIRMATIONS = {
@@ -396,7 +390,6 @@ AFFIRMATIONS = {
        "Setiap hari adalah kesempatan baru untuk merawat diri dengan lebih baik."],
 }
 
-# ── LOAD ARTIFACTS ──────────────────────────────────────────
 @st.cache_resource
 def load_artifacts():
     with open("model_bmi.pkl","rb") as f:  model  = pickle.load(f)
@@ -408,11 +401,10 @@ try:
     model_loaded = True
 except Exception as e:
     model_loaded = False
-    st.sidebar.warning(f"⚠️ Error: {e}")
+    st.sidebar.warning(f"Gagal memuat model: {e}")
 
-# ── IMAGE PROCESSING (Konsisten dengan Notebook Skripsi) ───
-# Fungsi ini TIDAK diubah: citra biner 128×128 ini yang dipakai sebagai
-# sumber 5 fitur morfologi untuk model ML.
+# Citra biner 128x128 harus identik dengan notebook pelatihan karena menjadi
+# sumber 5 fitur morfologi yang masuk ke StandardScaler dan Random Forest.
 def generate_body_silhouette(height_cm, weight_kg, gender, img_size=128):
     img = np.zeros((img_size, img_size), dtype=np.uint8)
     h_norm = np.clip((height_cm - 140) / (200 - 140), 0.0, 1.2)
@@ -442,7 +434,13 @@ def extract_image_features(img):
     compactness=(4*np.pi*pixel_area)/(perimeter**2+1e-5)
     return [pixel_area,round(aspect_ratio,4),round(body_density,4),round(perimeter,4),round(compactness,4)]
 
+def normalize_gender(g):
+    """Seragamkan variasi penulisan gender (male/M/Laki-laki/pria menjadi Male, selainnya Female)."""
+    s = str(g).strip().lower()
+    return "Male" if s in ("male", "m", "l", "laki-laki", "laki laki", "laki", "pria", "cowok", "1") else "Female"
+
 def build_feature_vector(gender, height, weight):
+    gender=normalize_gender(gender)
     h_m=height/100; bmi=weight/(h_m**2)
     img_feats=extract_image_features(generate_body_silhouette(height,weight,gender))
     g_num=1 if gender=="Male" else 0
@@ -474,94 +472,212 @@ def simulate_curve(gender, height, w_lo, w_hi):
         rows.append((w,round(bmi_w,2),p))
     return pd.DataFrame(rows,columns=["Berat","BMI","Pred"])
 
-# ── SILHOUETTE (tampilan proporsional, bukan input ML) ──────
-def _curve(ys, vals, n=90):
-    """Interpolasi halus (PCHIP) untuk kontur tubuh; fallback linear jika scipy tidak ada."""
-    yy=np.linspace(ys[0], ys[-1], n)
+# Siluet anatomi tampak depan khusus tampilan UI (bukan input fitur ML).
+# Proporsi kanon 8 kepala (satuan tinggi tubuh = 1):
+# dagu 0.125, bahu 0.18, pusar 0.38, selangkangan 0.50, lutut 0.72, mata kaki 0.95.
+SIL_X0, SIL_X1, SIL_Y0, SIL_Y1, SIL_RES = -0.36, 0.36, -0.01, 1.01, 640
+
+def _smooth(xk, yk, xx):
+    """Interpolasi monoton halus (PCHIP); fallback linear jika scipy tidak ada."""
     try:
         from scipy.interpolate import PchipInterpolator
-        return yy, PchipInterpolator(ys, vals)(yy)
+        return PchipInterpolator(xk, yk)(xx)
     except Exception:
-        return yy, np.interp(yy, ys, vals)
+        return np.interp(xx, xk, yk)
+
+def _arc(cx, cy, r, a0, a1, n=24):
+    t = np.linspace(a0, a1, n)
+    return np.c_[cx + r*np.cos(t), cy + r*np.sin(t)]
+
+def _limb(ys, cx, wo, wi, side, cap_top=False, cap_bot=False, n=90):
+    """Anggota tubuh: garis tengah cx(y), setengah lebar sisi luar wo(y) & dalam wi(y)."""
+    yy = np.linspace(ys[0], ys[-1], n)
+    c = _smooth(ys, cx, yy); o = _smooth(ys, wo, yy); i = _smooth(ys, wi, yy)
+    outer = np.c_[side*(c+o), yy]; inner = np.c_[side*(c-i), yy]
+    pts = [outer]
+    if cap_bot:
+        r = (o[-1]+i[-1])/2; m = side*(c[-1]+(o[-1]-i[-1])/2)
+        a = _arc(m, yy[-1], r, 0, np.pi) if side > 0 else _arc(m, yy[-1], r, np.pi, 0)
+        pts.append(a)
+    pts.append(inner[::-1])
+    if cap_top:
+        r = (o[0]+i[0])/2; m = side*(c[0]+(o[0]-i[0])/2)
+        a = _arc(m, yy[0], r, np.pi, 2*np.pi) if side > 0 else _arc(m, yy[0], r, 2*np.pi, np.pi)
+        pts.append(a)
+    return np.vstack(pts)
+
+def body_polygons(gender, bmi):
+    """Kumpulan poligon (satuan tinggi tubuh) membentuk siluet tampak depan."""
+    male = gender == "Male"
+    f = float(np.clip((bmi - 22.0) / 18.0, -0.45, 1.10))   # 0 = BMI 22 (ideal)
+    grow = lambda c: 1.0 + c*f
+    polys = []
+
+    # Torso: (y, setengah lebar, koefisien pertumbuhan lemak)
+    if male:
+        T = [(0.150,0.030,0.35),(0.160,0.052,0.30),(0.172,0.082,0.20),(0.186,0.104,0.28),
+             (0.205,0.110,0.32),(0.235,0.104,0.35),(0.265,0.101,0.50),(0.300,0.094,0.70),
+             (0.340,0.087,0.95),(0.375,0.085,1.05),(0.410,0.089,0.90),(0.450,0.096,0.65),
+             (0.485,0.094,0.55),(0.508,0.084,0.55)]
+    else:
+        T = [(0.150,0.026,0.35),(0.160,0.046,0.30),(0.172,0.072,0.20),(0.186,0.092,0.28),
+             (0.205,0.096,0.32),(0.232,0.090,0.40),(0.258,0.096,0.55),(0.288,0.088,0.65),
+             (0.330,0.077,0.90),(0.362,0.075,1.00),(0.405,0.092,0.85),(0.452,0.108,0.65),
+             (0.485,0.106,0.55),(0.508,0.094,0.55)]
+    ty = np.array([t[0] for t in T])
+    tw = np.array([t[1]*grow(t[2]) for t in T])
+    yy = np.linspace(ty[0], ty[-1], 120)
+    ww = _smooth(ty, tw, yy)
+    # Bagian bawah torso melengkung ke selangkangan (bukan potongan datar)
+    polys.append(np.vstack([np.c_[ww, yy], [[0.0, ty[-1] + 0.014]], np.c_[-ww[::-1], yy[::-1]]]))
+    torso_w = lambda y: float(np.interp(y, yy, ww, left=0.0, right=0.0))   # lebar torso di level y
+
+    # Leher (trapezius menyatu ke bahu)
+    nw = (0.029 if male else 0.023) * grow(0.35)
+    polys.append(np.array([[-nw,0.100],[nw,0.100],[nw*1.08,0.150],[nw*1.35,0.168],
+                           [-nw*1.35,0.168],[-nw*1.08,0.150]]))
+
+    # Kepala: bentuk telur, rahang menyempit, pipi sedikit melebar saat BMI tinggi
+    a = (0.049 if male else 0.045) * grow(0.12); b = 0.064; cy = 0.066
+    t = np.linspace(0, 2*np.pi, 120)
+    hx = a*np.sin(t); hy = cy - b*np.cos(t)
+    low = hy > cy
+    hx[low] *= 1 - (0.22 if male else 0.30) * ((hy[low]-cy)/b)**2 * (1 - 0.5*max(f, 0))
+    polys.append(np.c_[hx, hy])
+
+    # Lengan: deltoid, bisep, siku, lengan bawah, pergelangan, dan tangan.
+    ay = [0.198,0.228,0.265,0.315,0.360,0.420,0.468,0.500,0.535,0.566]
+    if male:
+        acx = [0.104,0.114,0.122,0.128,0.133,0.139,0.145,0.148,0.149,0.149]
+        awo = [0.030,0.031,0.028,0.022,0.025,0.022,0.016,0.020,0.020,0.013]
+        awi = [0.024,0.026,0.024,0.019,0.022,0.019,0.014,0.019,0.017,0.010]
+    else:
+        acx = [0.092,0.102,0.110,0.117,0.123,0.130,0.137,0.140,0.141,0.141]
+        awo = [0.025,0.026,0.024,0.019,0.021,0.019,0.013,0.017,0.017,0.011]
+        awi = [0.020,0.022,0.020,0.016,0.019,0.016,0.012,0.016,0.015,0.009]
+    ac = [0.35,0.55,0.60,0.30,0.45,0.35,0.12,0.15,0.12,0.08]
+    awo_g = [w*grow(c) for w, c in zip(awo, ac)]
+    awi_g = [w*grow(c) for w, c in zip(awi, ac)]
+    # Geser lengan keluar agar tidak menembus torso saat BMI tinggi.
+    gap = [0.0, 0.0, 0.004, 0.008, 0.009, 0.010, 0.012, 0.012, 0.012, 0.012]
+    base_x = [x + (wg - w) for x, w, wg in zip(acx, awi, awi_g)]
+    req = [torso_w(y) + wg + gp if gp > 0 else -1 for y, wg, gp in zip(ay, awi_g, gap)]
+    shift = max(0.0, max(r - x for r, x in zip(req, base_x)))
+    wt = [0.45, 0.65, 0.85, 1, 1, 1, 1, 1, 1, 1]
+    acx_g = [max(x + shift*k, r) for x, r, k in zip(base_x, req, wt)]
+    for s in (-1, 1):
+        polys.append(_limb(ay, acx_g, awo_g, awi_g, s, cap_top=True, cap_bot=True))
+
+    # Tungkai: paha, lutut, betis, dan pergelangan kaki.
+    ly = [0.440,0.500,0.560,0.630,0.700,0.725,0.765,0.805,0.860,0.920,0.952]
+    if male:
+        lcx = [0.050,0.054,0.055,0.053,0.050,0.049,0.049,0.049,0.047,0.045,0.044]
+        lwo = [0.046,0.050,0.046,0.040,0.031,0.030,0.034,0.035,0.028,0.019,0.017]
+        lwi = [0.046,0.046,0.040,0.033,0.025,0.025,0.028,0.028,0.021,0.015,0.014]
+    else:
+        lcx = [0.056,0.058,0.056,0.051,0.046,0.045,0.046,0.047,0.046,0.044,0.043]
+        lwo = [0.052,0.056,0.050,0.041,0.030,0.028,0.032,0.032,0.025,0.017,0.015]
+        lwi = [0.050,0.048,0.041,0.032,0.023,0.023,0.026,0.026,0.019,0.013,0.012]
+    lc = [0.55,0.60,0.55,0.45,0.30,0.26,0.34,0.34,0.22,0.10,0.08]
+    lwo_g = [w*grow(c) for w, c in zip(lwo, lc)]
+    lwi_g = [w*grow(c) for w, c in zip(lwi, lc)]
+    lcx_g = [x + 0.6*(wg - w) for x, w, wg in zip(lcx, lwi, lwi_g)]
+    for s in (-1, 1):
+        polys.append(_limb(ly, lcx_g, lwo_g, lwi_g, s))
+        # Telapak kaki (tampak depan, ujung sedikit mengarah keluar)
+        ax_ = lcx_g[-1]; fw = 0.021*grow(0.10)
+        polys.append(np.array([[s*(ax_-fw*0.75),0.945],[s*(ax_+fw*0.85),0.945],
+                               [s*(ax_+fw*1.15),0.975],[s*(ax_+fw*1.05),0.990],
+                               [s*(ax_-fw*0.80),0.990],[s*(ax_-fw*0.90),0.970]]))
+        e = _arc(0, 0, 1.0, 0, 2*np.pi, 40)
+        polys.append(np.c_[s*(ax_+fw*0.30) + e[:,0]*fw*1.15, 0.988 + e[:,1]*0.012])
+    return polys
+
+def _rasterize(polys):
+    """Gabungkan poligon menjadi mask anti-alias (tanpa sambungan antar bagian)."""
+    S = SIL_RES
+    w = int((SIL_X1-SIL_X0)*S); h = int((SIL_Y1-SIL_Y0)*S)
+    mask = np.zeros((h, w), np.uint8)
+    for p in polys:   # diisi satu per satu agar bagian yang tumpang-tindih tidak berlubang
+        pts = np.round(np.c_[(p[:,0]-SIL_X0)*S, (p[:,1]-SIL_Y0)*S]*16).astype(np.int32)
+        cv2.fillPoly(mask, [pts], 255, lineType=cv2.LINE_AA, shift=4)
+    return mask
+
+def _shade(mask, hex_color):
+    """Pencahayaan volumetrik halus dari height-map multi-skala ke Lambert dan spekular."""
+    m = mask.astype(np.float32)/255.0
+    z = (0.50*cv2.GaussianBlur(m, (0, 0), 3.5) +
+         0.35*cv2.GaussianBlur(m, (0, 0), 9.0) +
+         0.15*cv2.GaussianBlur(m, (0, 0), 20.0))
+    gx = cv2.Sobel(z, cv2.CV_32F, 1, 0, ksize=5)
+    gy = cv2.Sobel(z, cv2.CV_32F, 0, 1, ksize=5)
+    k = 0.55
+    nx, ny, nz = -gx*k, -gy*k, np.ones_like(z)
+    nn = np.sqrt(nx**2 + ny**2 + nz**2); nx, ny, nz = nx/nn, ny/nn, nz/nn
+    L = np.array([-0.45, -0.50, 0.74]); L = L/np.linalg.norm(L)
+    diff = np.clip(nx*L[0] + ny*L[1] + nz*L[2], 0, 1)
+    base = np.array(matplotlib.colors.to_rgb(hex_color))
+    shade = 0.28 + 0.82*diff
+    spec = np.clip(diff, 0, 1)**30*0.30
+    rgb = base[None, None, :]*shade[..., None] + spec[..., None]
+    # Oklusi lembut di tepi tubuh (memberi kesan kedalaman)
+    edge = cv2.GaussianBlur(m, (0, 0), 2.0)
+    rgb = rgb*(0.70 + 0.30*np.clip(edge*1.6 - 0.3, 0, 1))[..., None]
+    rgba = np.dstack([np.clip(rgb, 0, 1), mask.astype(np.float32)/255.0])
+    return rgba
 
 def draw_human_silhouette(height, weight, gender, idx):
     """
-    Siluet proporsional berbasis antropometri umum:
-    - Skala mengikuti tinggi badan (figur lebih tinggi = gambar lebih tinggi)
-    - Lebar bahu, pinggang, dan pinggul berbeda untuk laki-laki dan perempuan
-    - Lebar tubuh dan lengan/kaki menyesuaikan BMI
+    Siluet tampak depan yang realistis & proporsional:
+    - Proporsi kanon ±8 kepala, diskalakan sesuai tinggi badan (relatif 175 cm)
+    - Bentuk bahu, pinggang, pinggul, dan tungkai berbeda untuk laki-laki/perempuan
+    - Distribusi lemak per area (perut, pinggul, paha, lengan) mengikuti BMI
+    - Garis putus-putus = siluet pembanding pada BMI ideal (22) dengan tinggi yang sama
     Ini ILUSTRASI skematis, bukan representasi wajah atau bentuk tubuh spesifik.
     """
     bmi = weight/((height/100)**2)
-    H   = height/175.0                      # skala relatif terhadap 175 cm
-    k   = float(np.clip(0.80 + (bmi-18.5)*0.022, 0.80, 1.55))   # faktor lebar torso
-    kl  = float(np.clip(0.85 + (bmi-18.5)*0.012, 0.85, 1.25))   # faktor lebar anggota
-    male = gender == "Male"
+    H = height/175.0
     c = CAT_COLORS[idx]
 
-    fig,ax=plt.subplots(figsize=(3.6,5.6))
+    fig, ax = plt.subplots(figsize=(3.6, 5.6))
     fig.patch.set_facecolor(BG_CARD); ax.set_facecolor(BG_CARD)
 
-    # Profil torso: (posisi-y dari kepala, setengah lebar) dalam satuan tinggi tubuh
-    if male:
-        tor=[(0.155,0.030),(0.170,0.066),(0.190,0.112),(0.260,0.105),(0.330,0.088),
-             (0.400,0.076),(0.470,0.080),(0.520,0.086)]
-    else:
-        tor=[(0.155,0.028),(0.170,0.060),(0.190,0.098),(0.260,0.096),(0.330,0.078),
-             (0.400,0.068),(0.470,0.094),(0.520,0.104)]
-    ys=[t[0] for t in tor]; ws=[t[1]*k for t in tor]
-    yy,ww=_curve(ys,ws)
-    # Kontur torso: sisi kanan turun, sisi kiri naik (poligon tertutup)
-    tx=np.concatenate([ww,-ww[::-1]]); ty=np.concatenate([yy,yy[::-1]])
-    torso=np.c_[tx,ty]*H
-
-    polys=[torso]
-
-    # Kaki (dua poligon, sedikit menyempit ke arah pergelangan)
-    ly=np.linspace(0.50,1.0,60)
-    lw=np.interp(ly,[0.50,0.60,0.72,0.84,0.92,0.97,1.0],[0.064,0.060,0.042,0.037,0.027,0.021,0.017])
-    if not male:
-        lw=lw*np.interp(ly,[0.5,0.6,0.7],[1.08,1.04,1.0])
-    lw=lw*kl
-    for s in (-1,1):
-        cx=s*np.interp(ly,[0.50,1.0],[0.046,0.016])
-        left =np.c_[cx-lw, ly]
-        right=np.c_[cx+lw, ly][::-1]
-        polys.append(np.vstack([left,right])*H)
-
-    # Lengan (menggantung, sedikit menjauh dari badan)
-    ay=np.linspace(0.19,0.56,40)
-    acx=np.interp(ay,[0.19,0.30,0.40,0.50,0.56],[0.128,0.136,0.140,0.146,0.150])*(1+(k-1)*0.30)
-    aw=np.interp(ay,[0.19,0.30,0.40,0.50,0.56],[0.030,0.030,0.023,0.017,0.019])*kl
-    for s in (-1,1):
-        cx=s*acx
-        left =np.c_[cx-aw, ay]
-        right=np.c_[cx+aw, ay][::-1]
-        polys.append(np.vstack([left,right])*H)
-
-    for p in polys:
-        ax.add_patch(plt.Polygon(p,closed=True,color=c,alpha=0.94,zorder=3,linewidth=0))
-
-    # Leher dan kepala
-    ax.add_patch(plt.Rectangle((-0.030*H,0.115*H),0.060*H,0.050*H,color=c,zorder=3,linewidth=0))
-    ax.add_patch(Ellipse((0,0.070*H),0.092*H,0.128*H,color=c,zorder=3,linewidth=0))
-
     # Bayangan lantai
-    ax.add_patch(Ellipse((0,1.0*H+0.005),0.36*H,0.022*H,color="#000000",alpha=0.35,zorder=1,linewidth=0))
+    ax.add_patch(Ellipse((0, 1.0*H+0.006), 0.42*H, 0.030*H, color="#000000", alpha=0.45, zorder=1, linewidth=0))
+    ax.add_patch(Ellipse((0, 1.0*H+0.006), 0.26*H, 0.016*H, color="#000000", alpha=0.35, zorder=1, linewidth=0))
 
-    # Garis dimensi tinggi (tanpa mengubah data)
-    ax.plot([0.30*H,0.30*H],[0.0*H,1.0*H],color=TXT_SUB,linewidth=0.8,zorder=2)
-    ax.plot([0.285*H,0.315*H],[0.0*H,0.0*H],color=TXT_SUB,linewidth=0.8)
-    ax.plot([0.285*H,0.315*H],[1.0*H,1.0*H],color=TXT_SUB,linewidth=0.8)
-    ax.text(0.34*H,0.5*H,f"{height} cm",color=TXT_SUB,fontsize=8,va="center",ha="left",rotation=90)
+    # Tubuh (render volumetrik)
+    mask = _rasterize(body_polygons(gender, bmi))
+    ax.imshow(_shade(mask, c), extent=(SIL_X0*H, SIL_X1*H, SIL_Y1*H, SIL_Y0*H),
+              interpolation="bilinear", zorder=3)
 
-    ax.text(0,1.0*H+0.09,LABEL_ID[idx],ha="center",fontsize=9,fontweight="bold",color=TXT_BODY)
+    # Garis pembanding BMI ideal
+    if abs(bmi - 22.0) > 2.0:
+        m_ref = _rasterize(body_polygons(gender, 22.0))
+        cnts, _ = cv2.findContours((m_ref > 127).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for cn in cnts:
+            p = cn[:, 0, :].astype(float)
+            px = (p[:, 0]/SIL_RES + SIL_X0)*H; py = (p[:, 1]/SIL_RES + SIL_Y0)*H
+            ax.plot(np.r_[px, px[0]], np.r_[py, py[0]], color="#F5F3EE", linewidth=0.7,
+                    linestyle=(0, (3, 2)), alpha=0.55, zorder=4)
 
-    ax.set_xlim(-0.42,0.52); ax.set_ylim(1.30,-0.06)
-    ax.set_aspect("equal",adjustable="box"); ax.axis("off")
-    plt.tight_layout(pad=0.2); return fig
+    # Garis dimensi tinggi
+    xd = 0.33*H
+    ax.plot([xd, xd], [0.0, 1.0*H], color=TXT_SUB, linewidth=0.8, zorder=2)
+    for yv in (0.0, 1.0*H):
+        ax.plot([xd-0.015, xd+0.015], [yv, yv], color=TXT_SUB, linewidth=0.8)
+    ax.text(xd+0.035, 0.5*H, f"{height} cm", color=TXT_SUB, fontsize=8, va="center", ha="left", rotation=90)
 
-# ── LIVE CLOCK (fragment: hanya bagian ini yang di-refresh) ─
+    ax.text(0, 1.0*H+0.09, f"{LABEL_ID[idx]}  ·  BMI {bmi:.1f}", ha="center", fontsize=9,
+            fontweight="bold", color=TXT_BODY)
+    if abs(bmi - 22.0) > 2.0:
+        ax.text(0, 1.0*H+0.15, "- - -  siluet BMI ideal (22)", ha="center", fontsize=7, color=TXT_SUB)
+
+    ax.set_xlim(-0.46, 0.50); ax.set_ylim(1.36, -0.06)
+    ax.set_aspect("equal", adjustable="box"); ax.axis("off")
+    plt.tight_layout(pad=0.2)
+    return fig
+
 def _clock_body():
     now = datetime.now(WIB)
     st.markdown(
@@ -574,9 +690,8 @@ def _clock_body():
 if hasattr(st, "fragment"):
     live_clock = st.fragment(run_every="1s")(_clock_body)
 else:
-    live_clock = _clock_body   # Streamlit < 1.37: tampil statis
+    live_clock = _clock_body   # Fallback statis untuk Streamlit < 1.37.
 
-# ── SIDEBAR ─────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### Input Data Antropometri")
     st.caption("Hasil diperbarui otomatis saat slider digeser.")
@@ -591,7 +706,7 @@ with st.sidebar:
     c2=CAT_COLORS[bi]
 
     if st.session_state.last_idx is not None and st.session_state.last_idx != bi:
-        st.toast(f"Kategori berubah menjadi {LABEL_ID[bi]}", icon="🔄")
+        st.toast(f"Kategori berubah menjadi {LABEL_ID[bi]}")
     st.session_state.last_idx = bi
 
     st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
@@ -609,7 +724,7 @@ with st.sidebar:
     st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
 
     if st.button("Simpan ke Riwayat", use_container_width=True):
-        pred_lbl="—"
+        pred_lbl="-"
         if model_loaded:
             fv_s=build_feature_vector(gender,height,weight)
             pred_lbl=LABEL_ID[int(model.predict(scaler.transform([fv_s]))[0])]
@@ -622,24 +737,19 @@ with st.sidebar:
             "Kategori (IMT)": LABEL_ID[bi],
             "Prediksi ML": pred_lbl,
         })
-        st.toast("Pengukuran tersimpan ke riwayat", icon="✅")
+        st.toast("Pengukuran tersimpan ke riwayat")
 
-# ── HEADER ──────────────────────────────────────────────────
 st.markdown("""
 <div class="page-header">
-<span class="page-eyebrow">Skripsi S1 Informatika · Universitas AMIKOM Yogyakarta</span>
+<p class="page-meta">Skripsi S1 Informatika · Universitas AMIKOM Yogyakarta</p>
 <h1 class="page-title">BMI Analyzer</h1>
 <p class="page-sub">Klasifikasi kategori IMT melalui simulasi citra biner dan machine learning</p>
 <p class="page-author">Satrio Raja Nabil Rizky &nbsp;·&nbsp; 23.11.5538</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ── TABS ────────────────────────────────────────────────────
 t1,t2,t3,t4,t5=st.tabs(["Kalkulator BMI","Analisis Data (n=3,700)","Distribusi Probabilitas","Evaluasi 6 Model ML","Rekomendasi"])
 
-# ═══════════════════════════════════════════════════════════
-# TAB 1 — KALKULATOR BMI
-# ═══════════════════════════════════════════════════════════
 with t1:
     ca,cb=st.columns([1,1.8])
     with ca:
@@ -647,7 +757,7 @@ with t1:
             st.markdown("#### Siluet Tubuh")
             fig_s=draw_human_silhouette(height,weight,gender,bi)
             st.pyplot(fig_s,use_container_width=True); plt.close()
-            st.caption("Siluet ini hanya ilustrasi proporsi.")
+            st.caption("Ilustrasi 3D tampak depan (proporsi anatomi ±8 kepala, distribusi lemak mengikuti BMI). Garis putus-putus = pembanding BMI ideal 22.")
 
         with st.expander("Citra Biner OpenCV & Fitur Morfologi", expanded=True):
             img_cv = generate_body_silhouette(height, weight, gender)
@@ -703,7 +813,7 @@ with t1:
                 '<p class="pred-title">Prediksi Machine Learning</p>'
                 f'<span class="pill" style="color:{c3};border-color:{c3}55">{LABEL_ID[pred]}</span>'
                 f'<span style="margin-left:10px;color:{TXT_MAIN};font-family:Playfair Display,serif;font-size:1.05rem">{format_sub_label(pred)}</span>'
-                f'<p class="pred-meta">Confidence {conf:.1f}% &nbsp;·&nbsp; Model Random Forest (Acc 99.73% pada n=3,700)</p>'
+                f'<p class="pred-meta">Confidence {conf:.1f}% &nbsp;·&nbsp; Model Random Forest (Acc 99.73% · split 80:20 · n=3,700)</p>'
                 '</div>', unsafe_allow_html=True)
         else:
             st.warning("Pastikan model_bmi.pkl dan scaler_bmi.pkl tersedia di repositori.")
@@ -742,7 +852,6 @@ with t1:
             st.markdown(f'<p class="aff-text">"{msgs[idx_msg]}"</p>', unsafe_allow_html=True)
             st.markdown(f'<p class="aff-note">Pesan {idx_msg+1} dari {len(msgs)} · kategori {LABEL_ID[bi]}</p>', unsafe_allow_html=True)
 
-    # ── Riwayat pengukuran (sesi) dengan jam real-time GMT+7 ─
     st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
     st.markdown("#### Riwayat Pengukuran (sesi ini)")
     live_clock()
@@ -759,16 +868,13 @@ with t1:
             ax.axhline(25,color=ACCENT_2,linestyle=":",linewidth=0.9)
             ax.set_xlabel("Urutan pengukuran"); ax.set_ylabel("BMI")
             ax.set_xticks(xs)
-            plt.tight_layout(); st.pyplot(fig,use_container_width=True); plt.close()
+            plt.tight_layout(); st.pyplot(fig,use_container_width=True); plt.close(fig)
         if st.button("Hapus riwayat", key="clear_hist"):
             st.session_state.riwayat=[]
             st.rerun()
     else:
         st.caption("Belum ada data. Klik \"Simpan ke Riwayat\" di sidebar untuk mulai mencatat.")
 
-# ═══════════════════════════════════════════════════════════
-# TAB 2 — ANALISIS DATA (dengan filter interaktif)
-# ═══════════════════════════════════════════════════════════
 with t2:
     try:
         df_data=pd.read_csv("bmi.csv")
@@ -780,7 +886,7 @@ with t2:
         s1.metric("Total Dataset Gabungan",f"{len(df_data):,}")
         s2.metric("Fitur (11 Tabular + 5 Citra)","16")
         s3.metric("Kategori IMT","6 Kelas")
-        s4.metric("Best Accuracy (RF)","99.78%")
+        s4.metric("Best Accuracy (RF · 75:25)","99.78%")
 
         st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
         fc1,fc2=st.columns([1,2])
@@ -835,9 +941,6 @@ with t2:
     except FileNotFoundError:
         st.warning("Pastikan file bmi.csv tersedia di repositori.")
 
-# ═══════════════════════════════════════════════════════════
-# TAB 3 — DISTRIBUSI PROBABILITAS + SIMULASI SKENARIO
-# ═══════════════════════════════════════════════════════════
 with t3:
     st.markdown("#### Distribusi Probabilitas Prediksi")
 
@@ -850,7 +953,7 @@ with t3:
         prob_full=np.zeros(6)
         for i,cls in enumerate(model.classes_): prob_full[cls]=proba2[i]
 
-        st.markdown(f"Berdasarkan **Random Forest** (Accuracy 99.73%) untuk BMI saat ini: **{bmi_val:.1f}**")
+        st.markdown(f"Berdasarkan **Random Forest** (Accuracy 99.73% · split 80:20) untuk BMI saat ini: **{bmi_val:.1f}**")
 
         with st.container(border=True):
             for i,(cat,p) in enumerate(zip(LABEL_ID.values(),prob_full)):
@@ -885,7 +988,7 @@ with t3:
                 for x in ats: x.set_color("#09090E"); x.set_fontsize(7); x.set_fontweight("bold")
                 st.pyplot(fig,use_container_width=True); plt.close()
 
-        st.dataframe(pd.DataFrame({"Kategori ID":list(LABEL_ID.values()),"Kategori EN":list(LABEL_MAP.values()),"Probabilitas (%)":[f"{p*100:.2f}%" for p in prob_full],"Prediksi":["YA" if i==pred2 else "—" for i in range(6)]}),hide_index=True,use_container_width=True)
+        st.dataframe(pd.DataFrame({"Kategori ID":list(LABEL_ID.values()),"Kategori EN":list(LABEL_MAP.values()),"Probabilitas (%)":[f"{p*100:.2f}%" for p in prob_full],"Prediksi":["YA" if i==pred2 else "-" for i in range(6)]}),hide_index=True,use_container_width=True)
 
         st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
         st.markdown("#### Simulasi Skenario Berat Badan")
@@ -909,9 +1012,6 @@ with t3:
     else:
         st.warning("Model belum dimuat.")
 
-# ═══════════════════════════════════════════════════════════
-# TAB 4 — AKURASI MODEL (skenario split bisa dipilih)
-# ═══════════════════════════════════════════════════════════
 with t4:
     st.markdown("#### Perbandingan Performa 6 Algoritma Machine Learning")
     st.markdown("Hasil eksperimen pada dataset gabungan `bmi.csv` · **n = 3,700 sampel** · **5 Skenario Rasio Split (90:10, 80:20, 75:25, 70:30, 60:40)** · **16 Fitur** (11 Fitur Antropometri + 5 Fitur Morfologi Citra Siluet)")
@@ -1000,20 +1100,17 @@ with t4:
 
             cm_mat = get_confusion_matrix()
             with st.container(border=True):
-                st.markdown("#### Confusion Matrix — Random Forest (Split 80:20)")
+                st.markdown("#### Confusion Matrix: Random Forest (Split 80:20)")
                 fig,ax=plt.subplots(figsize=(8,5.5))
                 tnames=["Ext.Weak","Weak","Normal","Overweight","Obesity","Ext.Obesity"]
                 sns.heatmap(cm_mat,annot=True,fmt="d",cmap="Blues",ax=ax,xticklabels=tnames,yticklabels=tnames,linewidths=0.5,linecolor="#23232F")
                 ax.set_xlabel("Predicted Label"); ax.set_ylabel("Actual Label")
                 ax.tick_params(colors=TXT_BODY,labelsize=8); ax.tick_params(axis="x",rotation=25)
-                ax.set_title("Confusion Matrix — Random Forest (Data Uji 20% = 740 Sampel)",color=TXT_MAIN,fontsize=11)
-                plt.tight_layout(); st.pyplot(fig,use_container_width=True); plt.close()
+                ax.set_title("Confusion Matrix: Random Forest (Data Uji 20% = 740 Sampel)",color=TXT_MAIN,fontsize=11)
+                plt.tight_layout(); st.pyplot(fig,use_container_width=True); plt.close(fig)
         except Exception as e:
             st.warning(f"Gagal memuat Confusion Matrix: {e}")
 
-# ═══════════════════════════════════════════════════════════
-# TAB 5 — REKOMENDASI (checklist kebiasaan interaktif)
-# ═══════════════════════════════════════════════════════════
 with t5:
     st.markdown("#### Rekomendasi Kesehatan Personal")
     rec=RECOMMENDATIONS[bi]; rc=rec["color"]
@@ -1029,8 +1126,8 @@ with t5:
     done_count=0
     for i,(em,tit,desc) in enumerate(rec["items"]):
         st.markdown(
-            f'<div class="rec-item" style="border-left:2px solid {rc}">'
-            f'<div class="rec-icon">{em}</div>'
+            '<div class="rec-item">'
+            f'<div class="rec-num">{em}</div>'
             '<div>'
             f'<p class="rec-title">{tit}</p>'
             f'<p class="rec-desc">{desc}</p>'
@@ -1048,7 +1145,6 @@ with t5:
     td=pd.DataFrame({"Kategori (ID)":list(LABEL_ID.values()),"Kategori (EN)":list(LABEL_MAP.values()),"BMI Range":["< 16","16–18.5","18.5–25","25–30","30–40","> 40"],"Rentang Berat (kg)":[f"{round(lo*(height/100)**2)}–{round(hi*(height/100)**2)}" for lo,hi in [(10,16),(16,18.5),(18.5,25),(25,30),(30,40),(40,55)]]})
     st.dataframe(td,hide_index=True,use_container_width=True)
 
-# ── BATCH PREDICTION ────────────────────────────────────────
 st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
 st.markdown("#### Prediksi Batch (Upload File CSV)")
 st.caption("Format kolom CSV: Gender (Male/Female), Height (cm), Weight (kg)")
@@ -1058,8 +1154,16 @@ if uploaded_file and model_loaded:
     col_map = {c.lower().strip(): c for c in df_batch.columns}
     if all(k in col_map for k in ["gender", "height", "weight"]):
         df_batch = df_batch.rename(columns={col_map["gender"]:"Gender", col_map["height"]:"Height", col_map["weight"]:"Weight"})
+        df_batch["Height"] = pd.to_numeric(df_batch["Height"], errors="coerce")
+        df_batch["Weight"] = pd.to_numeric(df_batch["Weight"], errors="coerce")
+        n_awal = len(df_batch)
         df_batch = df_batch.dropna(subset=["Gender","Height","Weight"])
-        st.write(f"Data valid ditemukan: **{len(df_batch)} baris**")
+        df_batch = df_batch[(df_batch["Height"] > 50) & (df_batch["Height"] < 260) & (df_batch["Weight"] > 10) & (df_batch["Weight"] < 350)]
+        df_batch["Gender"] = df_batch["Gender"].map(normalize_gender)
+        st.write(f"Data valid ditemukan: **{len(df_batch)} baris**" + (f" ({n_awal-len(df_batch)} baris dilewati karena kosong/tidak wajar)" if n_awal > len(df_batch) else ""))
+        if df_batch.empty:
+            st.error("Tidak ada baris valid untuk diprediksi.")
+            st.stop()
         with st.spinner("Memproses prediksi batch..."):
             batch_fv=[build_feature_vector(str(r.Gender).strip(),float(r.Height),float(r.Weight)) for _,r in df_batch.iterrows()]
             batch_sc=scaler.transform(batch_fv)

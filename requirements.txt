@@ -1,7 +1,9 @@
+streamlit>=1.37
+pandas
+numpy
+scikit-learn
 opencv-python-headless
 matplotlib
 seaborn
-numpy
-pandas
-pillow
-scikit-learn
+scipy
+tzdata
