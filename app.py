@@ -40,20 +40,58 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Token warna permukaan dan tipografi (kontras terverifikasi >= 4.5:1 WCAG AA)
-BG_APP   = "#09090E"
-BG_SIDE  = "#0E0E15"
-BG_CARD  = "#12121A"
-BG_RAISE = "#1A1A24"
-BORDER   = "#23232F"
-BORDER_2 = "#34343F"
-TXT_MAIN = "#F5F3EE"
-TXT_BODY = "#D6D3CC"
-TXT_SUB  = "#8E8B99"
-ACCENT      = "#818CF8"
-ACCENT_HI   = "#A5B4FC"
-ACCENT_DEEP = "#4F46E5"
-ACCENT_2    = "#7DD3C0"
+if "riwayat" not in st.session_state:
+    st.session_state.riwayat = []
+if "aff_idx" not in st.session_state:
+    st.session_state.aff_idx = 0
+if "last_idx" not in st.session_state:
+    st.session_state.last_idx = None
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "Dark"
+
+IS_LIGHT = st.session_state.theme_mode == "Light"
+
+# Token warna permukaan dan tipografi untuk Dark Mode & White Mode (semua pasangan >= 4.5:1 WCAG AA)
+if IS_LIGHT:
+    BG_APP      = "#FAF9F5"
+    BG_SIDE     = "#F3F1EC"
+    BG_CARD     = "#FFFFFF"
+    BG_RAISE    = "#F1EFEA"
+    BORDER      = "#E2E0D8"
+    BORDER_2    = "#C8C4B8"
+    TXT_MAIN    = "#14141B"
+    TXT_BODY    = "#2D2C38"
+    TXT_SUB     = "#5C5969"
+    ACCENT      = "#4F46E5"
+    ACCENT_HI   = "#3730A3"
+    ACCENT_DEEP = "#4F46E5"
+    ACCENT_2    = "#0F766E"
+    PIE_TXT     = "#FFFFFF"
+    SIL_REF     = "#14141B"
+    SH_A1, SH_A2 = 0.14, 0.10
+    PILL_BG     = "rgba(20,20,27,0.04)"
+    TZ_BORDER   = "rgba(15,118,110,0.35)"
+    CAT_COLORS  = ["#1D4ED8","#15803D","#0F766E","#B45309","#B91C1C","#6D28D9"]
+else:
+    BG_APP      = "#09090E"
+    BG_SIDE     = "#0E0E15"
+    BG_CARD     = "#12121A"
+    BG_RAISE    = "#1A1A24"
+    BORDER      = "#23232F"
+    BORDER_2    = "#34343F"
+    TXT_MAIN    = "#F5F3EE"
+    TXT_BODY    = "#D6D3CC"
+    TXT_SUB     = "#8E8B99"
+    ACCENT      = "#818CF8"
+    ACCENT_HI   = "#A5B4FC"
+    ACCENT_DEEP = "#4F46E5"
+    ACCENT_2    = "#7DD3C0"
+    PIE_TXT     = "#09090E"
+    SIL_REF     = "#F5F3EE"
+    SH_A1, SH_A2 = 0.45, 0.35
+    PILL_BG     = "rgba(255,255,255,0.03)"
+    TZ_BORDER   = "rgba(125,211,192,0.35)"
+    CAT_COLORS  = ["#60A5FA","#4ADE80","#7DD3C0","#FBBF24","#F87171","#A78BFA"]
 
 plt.rcParams.update({
     "figure.facecolor": BG_CARD,
@@ -79,290 +117,291 @@ def style_ax(ax, grid_axis=None):
         ax.grid(axis=grid_axis, color=BORDER, linestyle="-", linewidth=0.6, alpha=0.9)
     return ax
 
-if "riwayat" not in st.session_state:
-    st.session_state.riwayat = []
-if "aff_idx" not in st.session_state:
-    st.session_state.aff_idx = 0
-if "last_idx" not in st.session_state:
-    st.session_state.last_idx = None
-
-st.markdown("""
+st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
-html, body, [class*="css"], .stApp {
+html, body, [class*="css"], .stApp {{
     font-family: 'Inter', sans-serif !important;
-}
-.stApp {
-    background: #09090E;
-    color: #F5F3EE;
-}
-header[data-testid="stHeader"] { background: transparent; }
-.block-container { padding-top: 2.2rem; padding-bottom: 3.5rem; max-width: 1280px; }
+}}
+.stApp {{
+    background: {BG_APP} !important;
+    color: {TXT_MAIN} !important;
+}}
+header[data-testid="stHeader"] {{ background: transparent !important; }}
+.block-container {{ padding-top: 2.2rem; padding-bottom: 3.5rem; max-width: 1280px; }}
 
-a[href], button, summary, select, label, [role="button"], [role="tab"] {
+a[href], button, summary, select, label, [role="button"], [role="tab"] {{
     cursor: pointer;
-}
-button:disabled, [aria-disabled="true"] {
+}}
+button:disabled, [aria-disabled="true"] {{
     cursor: not-allowed;
-}
-button:focus-visible, a:focus-visible, summary:focus-visible, [role="tab"]:focus-visible {
-    outline: 2px solid #A5B4FC !important;
+}}
+button:focus-visible, a:focus-visible, summary:focus-visible, [role="tab"]:focus-visible {{
+    outline: 2px solid {ACCENT_HI} !important;
     outline-offset: 2px !important;
-}
+}}
 
-section[data-testid="stSidebar"] {
-    background: #0E0E15 !important;
-    border-right: 1px solid #23232F;
-}
-section[data-testid="stSidebar"] .block-container { padding-top: 1.75rem; }
-section[data-testid="stSidebar"] h3 {
+section[data-testid="stSidebar"] {{
+    background: {BG_SIDE} !important;
+    border-right: 1px solid {BORDER};
+}}
+section[data-testid="stSidebar"] .block-container {{ padding-top: 1.75rem; }}
+section[data-testid="stSidebar"] h3 {{
     font-family: 'Playfair Display', serif !important;
     font-weight: 600 !important; font-size: 1.35rem !important;
-}
+}}
 
-h1, h2, h3, h4 { color: #F5F3EE !important; letter-spacing: -0.01em; }
-h4 { font-weight: 600 !important; font-size: 1.05rem !important; color: #F5F3EE !important; }
-.stApp p, .stApp li, .stApp label { color: #D6D3CC; }
-.stApp .stCaption, .stApp small { color: #8E8B99 !important; }
+h1, h2, h3, h4 {{ color: {TXT_MAIN} !important; letter-spacing: -0.01em; }}
+h4 {{ font-weight: 600 !important; font-size: 1.05rem !important; color: {TXT_MAIN} !important; }}
+.stApp p, .stApp li, .stApp label, .stApp span[data-baseweb] {{ color: {TXT_BODY}; }}
+.stApp .stCaption, .stApp small, div[data-testid="stCaptionContainer"] p {{ color: {TXT_SUB} !important; }}
+div[data-testid="stWidgetLabel"] p, div[data-testid="stRadio"] label p, div[data-testid="stCheckbox"] label p {{
+    color: {TXT_BODY} !important;
+}}
+div[data-baseweb="select"] > div, div[data-testid="stFileUploader"] section {{
+    background: {BG_CARD} !important;
+    border-color: {BORDER} !important;
+    color: {TXT_MAIN} !important;
+}}
 
-.page-header {
+.page-header {{
     position: relative; padding: 0.25rem 0 1.5rem; margin-bottom: 1.5rem;
-    border-bottom: 1px solid #23232F;
-}
-.page-meta {
-    font-size: 0.82rem; font-weight: 500; color: #A5B4FC;
+    border-bottom: 1px solid {BORDER};
+}}
+.page-meta {{
+    font-size: 0.82rem; font-weight: 500; color: {ACCENT_HI};
     letter-spacing: .04em; margin: 0 0 8px;
-}
-.page-title {
+}}
+.page-title {{
     font-family: 'Playfair Display', serif !important;
     font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; line-height: 1.12;
-    margin: 0 0 10px; color: #F5F3EE;
-}
-.page-sub { font-size: 0.98rem; color: #D6D3CC; margin: 0; font-weight: 400; }
-.page-author { font-size: 0.85rem; color: #8E8B99; margin: 10px 0 0; font-weight: 400; }
+    margin: 0 0 10px; color: {TXT_MAIN};
+}}
+.page-sub {{ font-size: 0.98rem; color: {TXT_BODY}; margin: 0; font-weight: 400; }}
+.page-author {{ font-size: 0.85rem; color: {TXT_SUB}; margin: 10px 0 0; font-weight: 400; }}
 
-div[data-baseweb="tab-list"] { gap: 28px; border-bottom: 1px solid #23232F; flex-wrap: wrap; }
-button[data-baseweb="tab"] {
-    color: #8E8B99 !important; font-weight: 400; font-size: 13.5px; letter-spacing: .01em;
+div[data-baseweb="tab-list"] {{ gap: 28px; border-bottom: 1px solid {BORDER}; flex-wrap: wrap; }}
+button[data-baseweb="tab"] {{
+    color: {TXT_SUB} !important; font-weight: 400; font-size: 13.5px; letter-spacing: .01em;
     padding: 12px 4px 14px !important; min-height: 44px; background: transparent !important;
     transition: color .15s ease;
-}
-button[data-baseweb="tab"]:hover { color: #F5F3EE !important; }
-button[data-baseweb="tab"][aria-selected="true"] { color: #F5F3EE !important; font-weight: 600; }
-div[data-baseweb="tab-highlight"] {
-    background: #818CF8 !important; height: 2px !important;
-}
+}}
+button[data-baseweb="tab"]:hover {{ color: {TXT_MAIN} !important; }}
+button[data-baseweb="tab"][aria-selected="true"] {{ color: {TXT_MAIN} !important; font-weight: 600; }}
+div[data-baseweb="tab-highlight"] {{
+    background: {ACCENT} !important; height: 2px !important;
+}}
 
-div[data-testid="stMetric"], div[data-testid="metric-container"] {
-    background: #12121A;
-    border: 1px solid #23232F; border-radius: 12px;
+div[data-testid="stMetric"], div[data-testid="metric-container"] {{
+    background: {BG_CARD};
+    border: 1px solid {BORDER}; border-radius: 12px;
     padding: 1.1rem 1.3rem 1.2rem;
-}
-div[data-testid="stMetricLabel"] p {
-    color: #8E8B99 !important; font-size: 11px !important; font-weight: 500 !important;
+}}
+div[data-testid="stMetricLabel"] p {{
+    color: {TXT_SUB} !important; font-size: 11px !important; font-weight: 500 !important;
     text-transform: uppercase; letter-spacing: .08em;
-}
-div[data-testid="stMetricValue"] {
-    color: #F5F3EE !important; font-weight: 500;
+}}
+div[data-testid="stMetricValue"] {{
+    color: {TXT_MAIN} !important; font-weight: 500;
     font-family: 'Playfair Display', serif !important; font-size: 2rem !important;
-}
+    overflow-wrap: break-word;
+}}
 
-div[data-testid="stVerticalBlockBorderWrapper"] > div > div > div[data-testid="stVerticalBlock"] { gap: 0.8rem; }
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    border-radius: 12px !important; border: 1px solid #23232F !important;
-    background: #12121A;
+div[data-testid="stVerticalBlockBorderWrapper"] > div > div > div[data-testid="stVerticalBlock"] {{ gap: 0.8rem; }}
+div[data-testid="stVerticalBlockBorderWrapper"] {{
+    border-radius: 12px !important; border: 1px solid {BORDER} !important;
+    background: {BG_CARD};
     padding: 0.4rem 0.6rem;
-}
+}}
 
-div[data-testid="stExpander"] {
-    background: #12121A;
-    border: 1px solid #23232F !important; border-radius: 12px !important;
-}
-div[data-testid="stExpander"] summary { min-height: 44px; display: flex; align-items: center; }
-div[data-testid="stExpander"] summary p { color: #F5F3EE !important; font-weight: 500; }
+div[data-testid="stExpander"] {{
+    background: {BG_CARD};
+    border: 1px solid {BORDER} !important; border-radius: 12px !important;
+}}
+div[data-testid="stExpander"] summary {{ min-height: 44px; display: flex; align-items: center; }}
+div[data-testid="stExpander"] summary p {{ color: {TXT_MAIN} !important; font-weight: 500; }}
 
-/* Tombol utama: kontras #FFFFFF di atas #4F46E5 = 6.29:1 (lulus WCAG AA) */
-.stButton > button, .stDownloadButton > button {
-    background: #4F46E5;
+/* Tombol utama: kontras #FFFFFF di atas #4F46E5 = 6.29:1 (lulus WCAG AA di kedua mode) */
+.stButton > button, .stDownloadButton > button {{
+    background: {ACCENT_DEEP};
     color: #FFFFFF !important; border: 1px solid #6366F1; border-radius: 10px;
     font-weight: 600; font-size: 13.5px; letter-spacing: .01em;
     padding: 0.6rem 1rem; min-height: 44px; width: 100%;
     transition: background-color .15s ease, border-color .15s ease;
-}
-.stButton > button:hover, .stDownloadButton > button:hover {
-    background: #4338CA; border-color: #818CF8; color: #FFFFFF !important;
-}
-.stButton > button:active, .stDownloadButton > button:active {
+}}
+.stButton > button:hover, .stDownloadButton > button:hover {{
+    background: #4338CA; border-color: {ACCENT}; color: #FFFFFF !important;
+}}
+.stButton > button:active, .stDownloadButton > button:active {{
     background: #3730A3;
-}
-.st-key-clear_hist > div > button {
-    background: transparent !important; color: #F5F3EE !important;
-    border: 1px solid #34343F !important;
-}
-.st-key-clear_hist > div > button:hover {
-    background: #1A1A24 !important; border-color: #818CF8 !important; color: #A5B4FC !important;
-}
+}}
+.st-key-clear_hist > div > button {{
+    background: transparent !important; color: {TXT_MAIN} !important;
+    border: 1px solid {BORDER_2} !important;
+}}
+.st-key-clear_hist > div > button:hover {{
+    background: {BG_RAISE} !important; border-color: {ACCENT} !important; color: {ACCENT_HI} !important;
+}}
 
-.bmi-card {
-    background: #12121A;
-    border: 1px solid #23232F; border-radius: 12px; padding: 16px 18px;
-}
-.card-label {
-    font-size: 11px; font-weight: 500; color: #8E8B99;
+.bmi-card {{
+    background: {BG_CARD};
+    border: 1px solid {BORDER}; border-radius: 12px; padding: 16px 18px;
+}}
+.card-label {{
+    font-size: 11px; font-weight: 500; color: {TXT_SUB};
     text-transform: uppercase; letter-spacing: .08em; margin: 0 0 8px;
-}
-.card-value {
+}}
+.card-value {{
     font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 500;
-    color: #F5F3EE; margin: 0; line-height: 1.1;
-}
-.card-sub { font-size: 12.5px; color: #8E8B99; margin: 6px 0 0; }
+    color: {TXT_MAIN}; margin: 0; line-height: 1.1;
+}}
+.card-sub {{ font-size: 12.5px; color: {TXT_SUB}; margin: 6px 0 0; }}
 
-.pill {
+.pill {{
     display: inline-block; padding: 4px 10px; border-radius: 6px;
     font-size: 11.5px; font-weight: 600; letter-spacing: .02em;
-    border: 1px solid; background: rgba(255,255,255,0.03);
-}
+    border: 1px solid; background: {PILL_BG};
+}}
 
-.scale-wrap { margin: 0.25rem 0 0.5rem; }
-.scale-label {
-    font-size: 11px; color: #8E8B99; font-weight: 500;
+.scale-wrap {{ margin: 0.25rem 0 0.5rem; }}
+.scale-label {{
+    font-size: 11px; color: {TXT_SUB}; font-weight: 500;
     text-transform: uppercase; letter-spacing: .08em; margin: 0 0 14px;
-}
-.scale-track {
+}}
+.scale-track {{
     position: relative; height: 6px; border-radius: 3px;
     background: linear-gradient(90deg, #60A5FA 0%, #4ADE80 28%, #FBBF24 52%, #F87171 76%, #A78BFA 100%);
-}
-.scale-marker {
+}}
+.scale-marker {{
     position: absolute; top: 50%; transform: translate(-50%, -50%);
     width: 18px; height: 18px; border-radius: 50%;
-    background: #09090E; border: 2px solid #F5F3EE;
-    box-shadow: 0 0 0 4px rgba(129,140,248,0.28);
+    background: {BG_APP}; border: 2px solid {TXT_MAIN};
+    box-shadow: 0 0 0 4px rgba(79,70,229,0.24);
     transition: left .3s ease;
-}
-.scale-ticks {
+}}
+.scale-ticks {{
     display: flex; justify-content: space-between; font-size: 11px;
-    color: #8E8B99; margin-top: 12px;
-}
+    color: {TXT_SUB}; margin-top: 12px;
+}}
 
-.pred-box {
-    border: 1px solid #23232F; border-radius: 12px; padding: 18px 20px;
-    background: #12121A;
-}
-.pred-title {
-    font-size: 11px; font-weight: 500; color: #8E8B99;
+.pred-box {{
+    border: 1px solid {BORDER}; border-radius: 12px; padding: 18px 20px;
+    background: {BG_CARD};
+}}
+.pred-title {{
+    font-size: 11px; font-weight: 500; color: {TXT_SUB};
     text-transform: uppercase; letter-spacing: .08em; margin: 0 0 12px;
-}
-.pred-meta { font-size: 12.5px; color: #8E8B99; margin: 12px 0 0; line-height: 1.6; }
+}}
+.pred-meta {{ font-size: 12.5px; color: {TXT_SUB}; margin: 12px 0 0; line-height: 1.6; }}
 
-.prob-row { margin-bottom: 18px; }
-.prob-head {
+.prob-row {{ margin-bottom: 18px; }}
+.prob-head {{
     display: flex; justify-content: space-between; align-items: baseline;
-    font-size: 14px; margin-bottom: 9px; color: #F5F3EE;
-}
-.prob-sub { color: #8E8B99; font-size: 12px; margin-left: 8px; font-weight: 400; }
-.prob-val { font-weight: 500; font-family: 'Playfair Display', serif; font-size: 1.05rem; }
-.prob-track { height: 6px; background: #1C1C26; border-radius: 4px; overflow: hidden; }
-.prob-fill { height: 100%; border-radius: 4px; transition: width .35s ease; }
+    font-size: 14px; margin-bottom: 9px; color: {TXT_MAIN};
+}}
+.prob-sub {{ color: {TXT_SUB}; font-size: 12px; margin-left: 8px; font-weight: 400; }}
+.prob-val {{ font-weight: 500; font-family: 'Playfair Display', serif; font-size: 1.05rem; }}
+.prob-track {{ height: 6px; background: {BG_RAISE}; border-radius: 4px; overflow: hidden; }}
+.prob-fill {{ height: 100%; border-radius: 4px; transition: width .35s ease; }}
 
-.cat-banner {
-    background: #12121A;
-    border: 1px solid #23232F; border-radius: 12px;
+.cat-banner {{
+    background: {BG_CARD};
+    border: 1px solid {BORDER}; border-radius: 12px;
     padding: 1.4rem 1.6rem; margin-bottom: 1.4rem;
-}
-.cat-banner-title { font-family: 'Playfair Display', serif; font-size: 1.55rem; font-weight: 500; margin: 0 0 8px; }
-.cat-banner-meta { font-size: 13.5px; color: #8E8B99; margin: 0; }
-.rec-item {
+}}
+.cat-banner-title {{ font-family: 'Playfair Display', serif; font-size: 1.55rem; font-weight: 500; margin: 0 0 8px; }}
+.cat-banner-meta {{ font-size: 13.5px; color: {TXT_SUB}; margin: 0; }}
+.rec-item {{
     display: flex; gap: 16px; align-items: flex-start;
-    background: #12121A;
-    border: 1px solid #23232F; border-radius: 10px;
+    background: {BG_CARD};
+    border: 1px solid {BORDER}; border-radius: 10px;
     padding: 16px 18px; margin-bottom: 4px;
-}
-.rec-num {
-    flex: 0 0 36px; height: 36px; border-radius: 8px; background: #1A1A24;
-    border: 1px solid #34343F; color: #A5B4FC;
+}}
+.rec-num {{
+    flex: 0 0 36px; height: 36px; border-radius: 8px; background: {BG_RAISE};
+    border: 1px solid {BORDER_2}; color: {ACCENT_HI};
     font-family: 'Playfair Display', serif; font-weight: 600; font-size: 0.95rem;
     display: flex; align-items: center; justify-content: center;
-}
-.rec-title { font-weight: 500; color: #F5F3EE; margin: 0 0 5px; font-size: 0.97rem; }
-.rec-desc { color: #D6D3CC; margin: 0; font-size: 0.89rem; line-height: 1.6; font-weight: 400; }
+}}
+.rec-title {{ font-weight: 500; color: {TXT_MAIN}; margin: 0 0 5px; font-size: 0.97rem; }}
+.rec-desc {{ color: {TXT_BODY}; margin: 0; font-size: 0.89rem; line-height: 1.6; font-weight: 400; }}
 
-.aff-text {
+.aff-text {{
     font-family: 'Playfair Display', serif; font-size: 1.25rem; font-style: italic;
-    color: #F5F3EE; line-height: 1.6; margin: 6px 0 0;
-}
-.aff-note { font-size: 12px; color: #8E8B99; margin-top: 10px; }
+    color: {TXT_MAIN}; line-height: 1.6; margin: 6px 0 0;
+}}
+.aff-note {{ font-size: 12px; color: {TXT_SUB}; margin-top: 10px; }}
 
-.clock {
+.clock {{
     display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
-    background: #12121A;
-    border: 1px solid #23232F; border-radius: 10px; padding: 10px 14px;
-    font-size: 13px; color: #D6D3CC; margin-bottom: 12px;
-}
-.clock b {
+    background: {BG_CARD};
+    border: 1px solid {BORDER}; border-radius: 10px; padding: 10px 14px;
+    font-size: 13px; color: {TXT_BODY}; margin-bottom: 12px;
+}}
+.clock b {{
     font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 600;
-    color: #A5B4FC; letter-spacing: .02em;
-}
-.clock-dot {
-    width: 8px; height: 8px; border-radius: 50%; background: #4ADE80;
-}
-.clock-tz {
+    color: {ACCENT_HI}; letter-spacing: .02em;
+}}
+.clock-dot {{
+    width: 8px; height: 8px; border-radius: 50%; background: #16A34A;
+}}
+.clock-tz {{
     margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: .08em;
-    color: #7DD3C0; border: 1px solid rgba(125,211,192,.35); border-radius: 6px; padding: 3px 9px;
-}
+    color: {ACCENT_2}; border: 1px solid {TZ_BORDER}; border-radius: 6px; padding: 3px 9px;
+}}
 
-div[data-testid="stDataFrame"] { border: 1px solid #23232F; border-radius: 10px; overflow: hidden; }
+div[data-testid="stDataFrame"] {{ border: 1px solid {BORDER}; border-radius: 10px; overflow: hidden; }}
 
-.gold-rule {
+.gold-rule {{
     height: 1px; border: 0; margin: 1.5rem 0;
-    background: #23232F;
-}
+    background: {BORDER};
+}}
 
-@media (max-width: 768px) {
-    .block-container { padding-top: 1.25rem; padding-bottom: 2rem; }
-    div[data-baseweb="tab-list"] { gap: 14px; }
-    .clock-tz { margin-left: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+@media (max-width: 768px) {{
+    .block-container {{ padding-top: 1.25rem; padding-bottom: 2rem; }}
+    div[data-baseweb="tab-list"] {{ gap: 14px; }}
+    .clock-tz {{ margin-left: 0; }}
+}}
+@media (prefers-reduced-motion: reduce) {{
+    *, *::before, *::after {{
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
-    }
-}
+    }}
+}}
 </style>
 """, unsafe_allow_html=True)
 
 LABEL_MAP   = {0:"Extremely Weak",1:"Weak",2:"Normal",3:"Overweight",4:"Obesity",5:"Extreme Obesity"}
 LABEL_ID    = {0:"Sangat Kurus",  1:"Kurus",  2:"Normal", 3:"Overweight",4:"Obesitas",5:"Sangat Obesitas"}
-CAT_COLORS  = ["#60A5FA","#4ADE80","#7DD3C0","#FBBF24","#F87171","#A78BFA"]
 CAT_BG      = ["#1e3a5f","#14532d","#065f46","#78350f","#7f1d1d","#3b0764"]
 
 RECOMMENDATIONS = {
-    0:{"title":"Perlu Perhatian Ekstra","color":"#60A5FA","items":[
+    0:{"title":"Perlu Perhatian Ekstra","color":CAT_COLORS[0],"items":[
         ("01","Perbanyak Kalori Bergizi","Makanan padat nutrisi: kacang, alpukat, nasi merah, protein hewani berkualitas."),
         ("02","Latihan Pembentuk Otot","Latihan beban 3×/minggu. Target massa otot bukan sekadar angka timbangan."),
         ("03","Konsultasi Dokter Gizi","BMI sangat rendah bisa menandakan kondisi medis tersembunyi."),
         ("04","Tidur 7–9 Jam Cukup","Tidur berkualitas mendukung hormon pertumbuhan dan nafsu makan.")]},
-    1:{"title":"Tingkatkan Nutrisi","color":"#4ADE80","items":[
+    1:{"title":"Tingkatkan Nutrisi","color":CAT_COLORS[1],"items":[
         ("01","Protein & Karbohidrat Kompleks","Target 1.5–2g protein/kg BB. Makan 5–6 kali porsi kecil per hari."),
         ("02","Olahraga Ringan Rutin","30 menit jalan cepat atau bersepeda per hari untuk membangun metabolisme."),
         ("03","Kelola Stres","Stres menekan nafsu makan. Latihan pernapasan atau relaksasi 10 menit/hari membantu.")]},
-    2:{"title":"Pertahankan Pola Hidup Sehat","color":"#7DD3C0","items":[
+    2:{"title":"Pertahankan Pola Hidup Sehat","color":CAT_COLORS[2],"items":[
         ("01","Jaga Konsistensi Pola Makan","BMI berada di rentang ideal. Pertahankan komposisi gizi seimbang dan jadwal makan teratur."),
         ("02","Olahraga Rutin & Gizi Seimbang","150 menit aktivitas sedang/minggu. Perbanyak sayur, buah, dan protein."),
         ("03","Cek Rutin 3–6 Bulan","Monitor BMI secara periodik agar perubahan kecil lebih mudah ditangani sejak dini."),
         ("04","Hidrasi Optimal","2–2.5 liter air/hari. Batasi minuman berpemanis tambahan.")]},
-    3:{"title":"Kendalikan Berat Badan","color":"#FBBF24","items":[
+    3:{"title":"Kendalikan Berat Badan","color":CAT_COLORS[3],"items":[
         ("01","Tingkatkan Aktivitas Harian","Targetkan 8.000–10.000 langkah/hari atau 45 menit latihan kardio teratur."),
         ("02","Kurangi Gula & Gorengan","Utamakan bahan pangan utuh dan periksa label nutrisi sebelum membeli."),
         ("03","Defisit Kalori Terukur","Defisit 300–500 kkal/hari mendukung penurunan 0.3–0.5 kg/minggu secara bertahap."),
         ("04","Perbaiki Kualitas Tidur","Kurang tidur meningkatkan hormon ghrelin pemicu lapar. Targetkan 7–9 jam/malam.")]},
-    4:{"title":"Prioritaskan Kesehatan","color":"#F87171","items":[
+    4:{"title":"Prioritaskan Kesehatan","color":CAT_COLORS[4],"items":[
         ("01","Konsultasi Dokter atau Ahli Gizi","Evaluasi profil metabolik untuk mencegah risiko diabetes, hipertensi, dan penyakit kardiovaskular."),
         ("02","Olahraga Rendah Benturan","Renang, jalan kaki, atau sepeda statis lebih aman bagi persendian. Mulai 20 menit/hari."),
         ("03","Pola Makan Terstruktur","Hindari diet ekstrem. Terapkan 3 kali makan utama dengan porsi serat dan protein terukur."),
         ("04","Dukungan Lingkungan","Libatkan keluarga atau komunitas sehat agar perubahan kebiasaan bertahan jangka panjang.")]},
-    5:{"title":"Pendampingan Medis Diperlukan","color":"#A78BFA","items":[
+    5:{"title":"Pendampingan Medis Diperlukan","color":CAT_COLORS[5],"items":[
         ("01","Program Medis Terpadu","BMI di atas 40 memerlukan supervisi dokter dan ahli gizi untuk perencanaan yang aman."),
         ("02","Pemantauan Tekanan Darah & Gula Darah","Lakukan pemeriksaan berkala dan kurangi asupan natrium serta pangan ultra-proses."),
         ("03","Aktivitas Fisik Bertahap","Mulai dengan berjalan ringan 10 menit 3×/hari, lalu tingkatkan sesuai toleransi tubuh."),
@@ -643,8 +682,8 @@ def draw_human_silhouette(height, weight, gender, idx):
     fig.patch.set_facecolor(BG_CARD); ax.set_facecolor(BG_CARD)
 
     # Bayangan lantai
-    ax.add_patch(Ellipse((0, 1.0*H+0.006), 0.42*H, 0.030*H, color="#000000", alpha=0.45, zorder=1, linewidth=0))
-    ax.add_patch(Ellipse((0, 1.0*H+0.006), 0.26*H, 0.016*H, color="#000000", alpha=0.35, zorder=1, linewidth=0))
+    ax.add_patch(Ellipse((0, 1.0*H+0.006), 0.42*H, 0.030*H, color="#000000", alpha=SH_A1, zorder=1, linewidth=0))
+    ax.add_patch(Ellipse((0, 1.0*H+0.006), 0.26*H, 0.016*H, color="#000000", alpha=SH_A2, zorder=1, linewidth=0))
 
     # Tubuh (render volumetrik)
     mask = _rasterize(body_polygons(gender, bmi))
@@ -658,7 +697,7 @@ def draw_human_silhouette(height, weight, gender, idx):
         for cn in cnts:
             p = cn[:, 0, :].astype(float)
             px = (p[:, 0]/SIL_RES + SIL_X0)*H; py = (p[:, 1]/SIL_RES + SIL_Y0)*H
-            ax.plot(np.r_[px, px[0]], np.r_[py, py[0]], color="#F5F3EE", linewidth=0.7,
+            ax.plot(np.r_[px, px[0]], np.r_[py, py[0]], color=SIL_REF, linewidth=0.7,
                     linestyle=(0, (3, 2)), alpha=0.55, zorder=4)
 
     # Garis dimensi tinggi
@@ -693,6 +732,14 @@ else:
     live_clock = _clock_body   # Fallback statis untuk Streamlit < 1.37.
 
 with st.sidebar:
+    st.radio(
+        "Mode Tampilan",
+        ["Dark", "Light"],
+        horizontal=True,
+        key="theme_mode",
+        format_func=lambda x: "Dark Mode" if x == "Dark" else "White Mode",
+    )
+    st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
     st.markdown("### Input Data Antropometri")
     st.caption("Hasil diperbarui otomatis saat slider digeser.")
     st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
@@ -919,7 +966,7 @@ with t2:
                 fig,ax=plt.subplots(figsize=(4,4))
                 gc=df_data["Gender"].value_counts()
                 wedges,texts,autotexts=ax.pie(gc,labels=gc.index,autopct="%1.1f%%",colors=[ACCENT,ACCENT_2],startangle=90,wedgeprops={"edgecolor":BG_CARD,"linewidth":2},textprops={"color":TXT_BODY})
-                for a in autotexts: a.set_color("#09090E"); a.set_fontweight("bold")
+                for a in autotexts: a.set_color(PIE_TXT); a.set_fontweight("bold")
                 ax.set_facecolor(BG_CARD)
                 st.pyplot(fig,use_container_width=True); plt.close()
 
@@ -985,7 +1032,7 @@ with t3:
                 fig,ax=plt.subplots(figsize=(5,4))
                 ws,ts,ats=ax.pie(prob_full+0.001,labels=list(LABEL_ID.values()),autopct=lambda p:f"{p:.1f}%" if p>1 else "",colors=CAT_COLORS,startangle=90,wedgeprops={"edgecolor":BG_CARD,"linewidth":1.5},textprops={"color":TXT_BODY})
                 for x in ts: x.set_fontsize(7)
-                for x in ats: x.set_color("#09090E"); x.set_fontsize(7); x.set_fontweight("bold")
+                for x in ats: x.set_color(PIE_TXT); x.set_fontsize(7); x.set_fontweight("bold")
                 st.pyplot(fig,use_container_width=True); plt.close()
 
         st.dataframe(pd.DataFrame({"Kategori ID":list(LABEL_ID.values()),"Kategori EN":list(LABEL_MAP.values()),"Probabilitas (%)":[f"{p*100:.2f}%" for p in prob_full],"Prediksi":["YA" if i==pred2 else "-" for i in range(6)]}),hide_index=True,use_container_width=True)
@@ -1049,7 +1096,7 @@ with t4:
             style_ax(ax,grid_axis="x")
             names=[p[0] for p in pairs]; vals=[p[1] for p in pairs]
             best=max(vals)
-            colors=[(ACCENT if v==best else "#8E8B99") for v in vals]
+            colors=[(ACCENT if v==best else TXT_SUB) for v in vals]
             brs=ax.barh(names,vals,color=colors,alpha=0.9,edgecolor=BG_CARD,linewidth=0.5)
             for b,v in zip(brs,vals): ax.text(v+0.1,b.get_y()+b.get_height()/2,f"{v:.2f}%",ha="left",va="center",color=TXT_MAIN,fontsize=9)
             ax.set_xlim(min(vals)-2,100.5); ax.set_xlabel("Accuracy (%)")
@@ -1103,7 +1150,7 @@ with t4:
                 st.markdown("#### Confusion Matrix: Random Forest (Split 80:20)")
                 fig,ax=plt.subplots(figsize=(8,5.5))
                 tnames=["Ext.Weak","Weak","Normal","Overweight","Obesity","Ext.Obesity"]
-                sns.heatmap(cm_mat,annot=True,fmt="d",cmap="Blues",ax=ax,xticklabels=tnames,yticklabels=tnames,linewidths=0.5,linecolor="#23232F")
+                sns.heatmap(cm_mat,annot=True,fmt="d",cmap="Blues",ax=ax,xticklabels=tnames,yticklabels=tnames,linewidths=0.5,linecolor=BORDER)
                 ax.set_xlabel("Predicted Label"); ax.set_ylabel("Actual Label")
                 ax.tick_params(colors=TXT_BODY,labelsize=8); ax.tick_params(axis="x",rotation=25)
                 ax.set_title("Confusion Matrix: Random Forest (Data Uji 20% = 740 Sampel)",color=TXT_MAIN,fontsize=11)
