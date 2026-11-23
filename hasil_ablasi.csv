@@ -1,0 +1,8 @@
+Konfigurasi,Jumlah fitur,Accuracy rata-rata (%),Accuracy std,Macro-F1 rata-rata (%),Macro-F1 std
+A. Tabular 11 (tanpa siluet),11,99.57,0.16,98.7,0.93
+B. Penuh 16 (tabular + siluet),16,99.57,0.16,98.7,0.95
+C. Tabular tanpa BMI-turunan (8),8,97.59,0.22,94.84,1.19
+D. Tabular tanpa BMI-turunan + siluet (13),13,97.14,0.42,94.94,1.0
+E. Gender + Height + Weight saja (3),3,97.16,0.15,94.83,0.48
+F. Gender + Height + Weight + siluet (8),8,97.24,0.6,95.03,1.29
+G. Gender + siluet saja (6),6,95.81,0.69,92.61,1.68

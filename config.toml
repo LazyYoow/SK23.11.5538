@@ -1,0 +1,12 @@
+# ============================================================
+# Konfigurasi Tema Streamlit: Obsidian Precision Dark UI
+# Satrio Raja Nabil Rizky (23.11.5538) - Universitas AMIKOM Yogyakarta
+# ============================================================
+
+[theme]
+base = "dark"
+primaryColor = "#3B82F6"
+backgroundColor = "#090A0D"
+secondaryBackgroundColor = "#14161B"
+textColor = "#F4F6F9"
+font = "sans serif"
