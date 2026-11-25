@@ -2451,7 +2451,7 @@ with t1:
             st.pyplot(fig_s,use_container_width=True); plt.close(fig_s)
             st.caption("Ilustrasi 3D proporsional (±8 kepala). Garis putus-putus = pembanding IMT ideal 22.")
 
-        with st.expander("Citra Biner OpenCV & 5 Fitur Morfologi", expanded=False):
+        with st.expander("Citra Biner OpenCV & 5 Fitur Morfologi", expanded=True):
             img_cv = generate_body_silhouette(height, weight, gender)
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_GRAY2RGB)
             cnts, _ = cv2.findContours(img_cv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -2602,9 +2602,10 @@ with t1:
             if d_t>0: msg=f"Perlu turun {d_t} kg untuk mencapai target {target_w} kg."
             elif d_t<0: msg=f"Perlu naik {-d_t} kg untuk mencapai target {target_w} kg."
             else: msg="Berat saat ini sudah sama dengan target."
+            bmit_sim_str = f"{bmi_t:.1f}".replace(".", ",")
             st.markdown(
                 f'<div class="sim-grid">'
-                f'<div class="sim-box"><p class="sim-lbl">BMI pada target ({target_w} kg)</p><p class="sim-val">{bmi_t:.1f}</p></div>'
+                f'<div class="sim-box"><p class="sim-lbl">IMT pada target ({target_w} kg)</p><p class="sim-val">{bmit_sim_str}</p></div>'
                 f'<div class="sim-box"><p class="sim-lbl">Kategori pada target</p><p class="sim-val tone-c{cat_t}">{LABEL_ID[cat_t]}</p></div>'
                 f'</div>',
                 unsafe_allow_html=True,
