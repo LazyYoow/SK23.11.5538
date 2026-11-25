@@ -1,4 +1,4 @@
-# BMI Analyzer: Klasifikasi Kategori Indeks Massa Tubuh Menggunakan Simulasi
+# Sistem Klasifikasi Kategori Indeks Massa Tubuh Menggunakan Simulasi
 # Image Processing dan Machine Learning Berbasis Data Antropometri
 # Disusun oleh: Satrio Raja Nabil Rizky (23.11.5538)
 # Dosen Pembimbing: Mulia Sulistiyono, S.Kom., M.Kom.
@@ -38,7 +38,7 @@ def fmt_waktu_riwayat(dt):
     return f"{dt.day:02d}/{dt.month:02d}/{dt.year} {dt:%H:%M:%S}"
 
 st.set_page_config(
-    page_title="BMI Analyzer | Skripsi S1 Informatika",
+    page_title="Klasifikasi Kategori IMT | Skripsi S1 Informatika - 23.11.5538",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -49,6 +49,12 @@ if "aff_idx" not in st.session_state:
     st.session_state.aff_idx = 0
 if "last_idx" not in st.session_state:
     st.session_state.last_idx = None
+if "inp_height" not in st.session_state:
+    st.session_state.inp_height = 170
+if "inp_weight" not in st.session_state:
+    st.session_state.inp_weight = 70
+if "inp_target" not in st.session_state:
+    st.session_state.inp_target = 65
 
 # Tema tunggal: Obsidian Precision Dark UI (WCAG AA >= 5.17:1 di seluruh permukaan)
 BG_APP       = "#090A0D"
@@ -58,7 +64,7 @@ BG_SURFACE   = "#14161B"
 BG_RAISE     = "#1B1E26"
 BORDER       = "#242832"
 BORDER_2     = "#313644"
-INPUT_BORDER = "#2E3340"
+INPUT_BORDER = "#667085"
 TXT_MAIN     = "#F4F6F9"
 TXT_BODY     = "#E2E6EE"
 TXT_SUB      = "#A1A8B8"
@@ -161,7 +167,7 @@ def build_bmi_gauge_svg(bmi_val, active_idx, label_text):
         xt = cx + rt * np.cos(np.radians(d_t))
         yt = cy - rt * np.sin(np.radians(d_t))
         paths.append(
-            f'<text x="{xt:.1f}" y="{yt:.1f}" fill="{TXT_TERT}" font-size="10" font-weight="600" '
+            f'<text x="{xt:.1f}" y="{yt:.1f}" fill="{TXT_SUB}" font-size="11.5" font-weight="600" '
             f'text-anchor="middle" dominant-baseline="middle">{lbl_t}</text>'
         )
 
@@ -192,7 +198,7 @@ def build_bmi_gauge_svg(bmi_val, active_idx, label_text):
     )
     return (
         '<div class="gauge-well">'
-        '<svg class="gauge-svg" viewBox="0 0 380 166" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BMI Arc Gauge">'
+        '<svg class="gauge-svg" viewBox="0 0 380 166" width="380" height="166" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gauge Indeks Massa Tubuh">'
         + "".join(paths) +
         '</svg></div>'
     )
@@ -211,6 +217,310 @@ def render_table(df):
         f'</table></div>',
         unsafe_allow_html=True,
     )
+
+# ============================================================
+# REDESIGN UI v2 (hanya tampilan; tidak menyentuh logika ML)
+# ============================================================
+HIDE_STREAMLIT_TOOLBAR = True   # True: sembunyikan Stop/menu titik tiga saat demo atau sidang
+
+REDESIGN_CSS = """
+/* ================================================================
+   REDESIGN LAYER v2 (Antislop Matte Pass):
+   Tanpa gradien dekoratif, tanpa pendar/glow, tanpa garis aksen dekoratif,
+   tanpa dot status kosong, dan target sentuh >= 44px.
+   ================================================================ */
+.stApp { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.block-container { padding-top: 2.2rem !important; max-width: 1280px !important; }
+
+/* ---------- HEADER ---------- */
+.page-header {
+    border-bottom: none !important;
+    padding: 0 0 18px !important;
+    margin-bottom: 4px !important;
+    align-items: center !important;
+}
+.page-title {
+    font-size: clamp(24px, 2.5vw, 32px) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.025em !important;
+    margin: 0 0 6px !important;
+    padding: 0 !important;
+}
+.page-sub { font-size: 14px !important; color: #A1A8B8 !important; max-width: 640px; }
+.page-id {
+    position: relative;
+    padding: 14px 18px !important;
+    border-radius: 12px !important;
+    background: #12141B !important;
+    border: 1px solid #232836 !important;
+    box-shadow: none !important;
+    min-width: 280px;
+}
+.page-id-kicker {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    color: #8A92A3 !important;
+    margin-bottom: 3px !important;
+}
+.page-id strong { font-size: 14.5px !important; letter-spacing: -0.01em; margin-bottom: 2px !important; }
+.page-id-line { display: block; font-size: 12px; color: #A1A8B8; line-height: 1.5; }
+
+/* ---------- TABS ---------- */
+div[data-baseweb="tab-list"] {
+    gap: 4px !important;
+    border-bottom: 1px solid #1E222C !important;
+    margin-bottom: 20px !important;
+}
+button[data-baseweb="tab"] {
+    padding: 10px 16px !important;
+    min-height: 44px !important;
+    border-radius: 8px 8px 0 0 !important;
+    font-size: 14px !important;
+    color: #A1A8B8 !important;
+}
+button[data-baseweb="tab"]:hover { background-color: #11141B !important; color: #F4F6F9 !important; }
+button[data-baseweb="tab"][aria-selected="true"] { color: #FFFFFF !important; font-weight: 600 !important; }
+div[data-baseweb="tab-highlight"] { background-color: #60A5FA !important; height: 2px !important; border-radius: 0; }
+
+/* ---------- KARTU UTAMA (container border) ---------- */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background-color: #12141A !important;
+    border: 1px solid #1F232D !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+    padding: 20px !important;
+}
+div[data-testid="stExpander"], div[data-testid="stExpander"] details {
+    border-radius: 12px !important;
+    background-color: #12141A !important;
+    border-color: #1F232D !important;
+}
+div[data-testid="stExpander"] summary { background-color: #12141A !important; border-radius: 12px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] h4 {
+    font-size: 15px !important; font-weight: 600 !important; letter-spacing: -0.01em; margin-bottom: 4px !important;
+}
+div[data-testid="stImage"] img { border-radius: 10px !important; }
+
+/* ---------- SIDEBAR (Flat Matte Solid) ---------- */
+section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {
+    background: #0D0F14 !important;
+    border-right: 1px solid #1A1D26 !important;
+}
+section[data-testid="stSidebar"] .block-container,
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] {
+    padding-top: 1.5rem !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] { gap: 14px !important; }
+
+.sb-head { padding: 0 2px 2px !important; }
+.sb-title { font-size: 16px !important; font-weight: 600 !important; letter-spacing: -0.015em; margin: 0; }
+.sb-sub { font-size: 12.5px !important; color: #8A92A3 !important; margin: 3px 0 0 !important; }
+
+/* Satu kartu kontrol matte (satu level border) */
+section[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] {
+    background-color: #12141B !important;
+    border: 1px solid #1F232E !important;
+    border-radius: 14px !important;
+    padding: 18px 18px 14px !important;
+    box-shadow: none !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] { gap: 0 !important; }
+
+/* Segmented switch matte tanpa gradien/glow, tap target >= 44px */
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {
+    background-color: #0A0B10 !important;
+    border: 1px solid #1E222D !important;
+    border-radius: 10px !important;
+    padding: 3px !important;
+    gap: 4px !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label {
+    min-height: 44px !important;
+    border-radius: 7px !important;
+    border: 1px solid transparent !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"]:hover,
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {
+    background-color: #151924 !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"][data-selected="true"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"]:has(input:checked),
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {
+    background: #1E2433 !important;
+    border-color: #5B657A !important;
+    box-shadow: none !important;
+}
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"] p,
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label p {
+    color: #9CA3AF !important; font-size: 13.5px !important; font-weight: 500 !important;
+}
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"][data-selected="true"] p,
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"]:has(input:checked) p,
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) p {
+    color: #F4F6F9 !important; font-weight: 600 !important;
+}
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] div[data-testid="stWidgetLabel"] p {
+    font-size: 13px !important; font-weight: 500 !important; letter-spacing: 0 !important;
+    text-transform: none !important; color: #A1A8B8 !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[data-testid="stWidgetLabel"] { margin-bottom: 8px !important; }
+
+/* Baris slider seragam: sentence case + nilai chip datar */
+.ctrl-row {
+    border-top: none !important;
+    margin-top: 18px !important;
+    padding-top: 0 !important;
+    margin-bottom: 4px;
+    align-items: center !important;
+}
+.ctrl-lbl { font-size: 13px !important; font-weight: 500 !important; letter-spacing: 0 !important; text-transform: none !important; color: #A1A8B8 !important; }
+.ctrl-readout {
+    font-size: 14.5px !important; font-weight: 600 !important; color: #F4F6F9 !important;
+    background: #0A0B10; border: 1px solid #232834; border-radius: 6px; padding: 2px 9px;
+}
+.ctrl-readout small { font-size: 11.5px !important; color: #8A92A3 !important; margin-left: 3px !important; }
+section[data-testid="stSidebar"] div[data-testid="stSlider"] { padding: 4px 4px 0 !important; }
+section[data-testid="stSidebar"] div[data-baseweb="slider"] div[role="slider"] {
+    width: 16px !important; height: 16px !important;
+    background-color: #F4F6F9 !important;
+    border: 2px solid #2563EB !important;
+    box-shadow: none !important;
+}
+
+/* Kartu IMT sidebar: matte solid dengan mistar 6 segmen diskrit WHO */
+.rail-card {
+    background: #13161E !important;
+    border: 1px solid #222733 !important;
+    border-radius: 14px !important;
+    padding: 18px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+}
+.rail-lbl { font-size: 12.5px !important; font-weight: 500 !important; letter-spacing: 0 !important; text-transform: none !important; color: #A1A8B8 !important; }
+.rail-hero { align-items: center !important; margin-top: 6px; }
+.rail-val { font-size: 34px !important; font-weight: 700 !important; letter-spacing: -0.03em !important; }
+.rail-unit { font-size: 13px !important; margin-left: 5px !important; }
+.rail-hero .status-tag { padding: 4px 10px; border-radius: 6px; font-size: 12px; }
+.rail-meter {
+    position: relative; height: 6px; border-radius: 3px; margin: 16px 0 4px;
+    background: linear-gradient(90deg,
+        #60A5FA 0% 14.4%, #13161E 14.4% 15.2%,
+        #38BDF8 15.2% 20.8%, #13161E 20.8% 21.6%,
+        #34D399 21.6% 37.1%, #13161E 37.1% 37.9%,
+        #FBBF24 37.9% 49.6%, #13161E 49.6% 50.4%,
+        #FB923C 50.4% 74.6%, #13161E 74.6% 75.4%,
+        #FB7185 75.4% 100%);
+    opacity: 0.9;
+}
+.rail-meter i {
+    position: absolute; top: -5px; width: 3px; height: 16px; border-radius: 2px;
+    background: #FFFFFF; transform: translateX(-50%); box-shadow: 0 0 0 2px #13161E;
+}
+.rail-ledger { border-top: 1px solid #1F2531 !important; margin-top: 14px !important; padding-top: 14px !important; gap: 10px !important; }
+.rail-row { font-size: 13px !important; }
+
+/* Tombol aksi utama solid tanpa gradien dan tanpa glow */
+section[data-testid="stSidebar"] .stButton > button {
+    min-height: 46px !important;
+    border-radius: 10px !important;
+    background: #2563EB !important;
+    border: 1px solid #3B82F6 !important;
+    color: #FFFFFF !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+}
+section[data-testid="stSidebar"] .stButton > button:hover {
+    background: #1D4ED8 !important;
+    border-color: #60A5FA !important;
+    color: #FFFFFF !important;
+}
+section[data-testid="stSidebar"] .stButton > button:active {
+    background: #1E40AF !important;
+    transform: translateY(1px);
+    box-shadow: none !important;
+}
+
+/* ---------- KARTU METRIK (Matte Netral tanpa Garis Warna Dekoratif) ---------- */
+.diag-hero {
+    background-color: #12141A !important;
+    border: 1px solid #1F232D !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+    padding: 24px !important;
+}
+.hero-top { align-items: flex-start !important; margin-bottom: 18px !important; }
+.hero-title { font-size: 22px !important; font-weight: 650 !important; letter-spacing: -0.02em !important; }
+.hero-sub { font-size: 13px !important; color: #A1A8B8 !important; margin-top: 4px !important; }
+.tint-pill {
+    padding: 5px 12px !important; border-radius: 6px !important;
+    font-size: 12.5px !important; line-height: 1.3; white-space: nowrap;
+}
+.tile-grid { gap: 12px !important; margin-bottom: 18px !important; }
+.metric-tile {
+    position: relative;
+    display: flex; flex-direction: column; gap: 5px;
+    min-height: 112px;
+    padding: 15px 16px !important;
+    border-radius: 12px !important;
+    background-color: #14171F !important;
+    border: 1px solid #242A36 !important;
+    box-shadow: none !important;
+}
+.tile-lbl {
+    font-size: 12.5px !important; font-weight: 500 !important;
+    letter-spacing: 0 !important; text-transform: none !important;
+    color: #A1A8B8 !important; margin: 0 !important;
+}
+.tile-blue .tile-lbl    { color: #A1A8B8 !important; }
+.tile-emerald .tile-lbl { color: #A1A8B8 !important; }
+.tile-amber .tile-lbl   { color: #A1A8B8 !important; }
+.tile-rose .tile-lbl    { color: #A1A8B8 !important; }
+.tile-val {
+    font-size: 22px !important; font-weight: 700 !important;
+    letter-spacing: -0.02em; line-height: 1.18 !important;
+    margin: 2px 0 0 !important; overflow-wrap: anywhere;
+}
+.tile-emerald .tile-val { color: #34D399; }
+.tile-rose .tile-val    { color: #FB7185; }
+.tile-meta { font-size: 12.5px !important; color: #A1A8B8 !important; margin: auto 0 0 !important; padding-top: 4px; line-height: 1.4; }
+.conf-bar { height: 4px; border-radius: 2px; background: #1E2433; margin-top: 8px; overflow: hidden; }
+.conf-bar i { display: block; height: 100%; border-radius: 2px; background: #60A5FA; }
+
+.gauge-well, .capsule-bar-wrap {
+    background-color: #0D0F14 !important;
+    border: 1px solid #1B1F28 !important;
+    border-radius: 12px !important;
+}
+.capsule-bar-wrap { padding: 16px 18px 12px !important; }
+.capsule-title { font-size: 15px !important; }
+.capsule-status { font-size: 15px !important; font-weight: 600 !important; }
+.capsule-track { height: 12px !important; background-color: #171A22 !important; }
+.ruler-ticks { font-size: 12px !important; color: #A1A8B8 !important; font-weight: 500; }
+
+/* Kartu simulasi target & afirmasi */
+.sim-box { border-radius: 10px !important; }
+
+@media (max-width: 1120px) {
+    .page-id { min-width: 0; }
+    .tile-val { font-size: 20px !important; }
+}
+@media (max-width: 640px) {
+    .page-title { font-size: 22px !important; }
+    .tile-val { font-size: 19px !important; }
+    .metric-tile { min-height: 0; }
+}
+"""
+
+HIDE_TOOLBAR_CSS = """
+[data-testid="stStatusWidget"], [data-testid="stMainMenu"], [data-testid="stToolbarActions"] { visibility: hidden !important; }
+[data-testid="stDecoration"] { display: none !important; }
+""" if HIDE_STREAMLIT_TOOLBAR else ""
 
 st.markdown(f"""
 <style>
@@ -282,7 +592,7 @@ st.markdown(f"""
     --radius-lg: 16px;
 }}
 
-/* Kanvas utama: Obsidian Black dengan matriks titik presisi */
+/* Kanvas utama: Obsidian matte tenang tanpa grid dekoratif */
 html, body, [class*="css"], .stApp {{
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
     font-size: var(--text-sm);
@@ -290,8 +600,7 @@ html, body, [class*="css"], .stApp {{
     line-height: 1.5;
     font-variant-numeric: tabular-nums;
     background-color: var(--color-bg) !important;
-    background-image: radial-gradient(#232733 1px, transparent 1px) !important;
-    background-size: 20px 20px !important;
+    background-image: none !important;
     color: var(--color-text-primary) !important;
 }}
 div[data-testid="stAppViewContainer"], section[data-testid="stMain"] {{
@@ -307,44 +616,197 @@ header[data-testid="stHeader"] button, header[data-testid="stHeader"] svg {{
 }}
 [data-testid="stAppDeployButton"] {{ display: none !important; }}
 .block-container {{
-    padding-top: var(--space-8);
-    padding-bottom: var(--space-16);
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-12);
     max-width: 1240px;
 }}
 
-a[href], button, summary, select, label, [role="button"], [role="tab"] {{
+a[href], button, summary, select, label, [role="button"], [role="tab"], [role="radio"], [role="slider"], input[type="checkbox"], input[type="radio"] {{
     cursor: pointer;
 }}
 button:disabled, [aria-disabled="true"] {{
     cursor: not-allowed;
 }}
-button:focus-visible, a:focus-visible, summary:focus-visible, [role="tab"]:focus-visible, input:focus-visible {{
+button:focus-visible, a:focus-visible, summary:focus-visible, [role="tab"]:focus-visible, [role="slider"]:focus-visible, input:focus-visible {{
     outline: 2px solid var(--color-primary-text) !important;
     outline-offset: 2px !important;
     box-shadow: none !important;
 }}
 
-/* Sidebar Obsidian Frame */
+/* Sidebar Architectural Instrument Panel */
 section[data-testid="stSidebar"], section[data-testid="stSidebar"] > div {{
     background-color: {BG_SIDE} !important;
     border-right: 1px solid var(--color-border);
     color: var(--color-text-primary) !important;
 }}
 section[data-testid="stSidebar"] .block-container {{
-    padding-top: var(--space-6);
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
+    padding-top: var(--space-4) !important;
+    padding-bottom: var(--space-6) !important;
+    padding-left: var(--space-4) !important;
+    padding-right: var(--space-4) !important;
 }}
-section[data-testid="stSidebar"] h3 {{
-    font-size: var(--text-lg) !important;
-    font-weight: 600 !important;
-    line-height: 1.25 !important;
-    color: var(--color-text-primary) !important;
-    letter-spacing: -0.01em;
+section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] {{
+    gap: 10px !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] {{
+    background-color: #13161D !important;
+    border: 1px solid #252A36 !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    box-shadow: none !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {{
+    gap: 4px !important;
 }}
 section[data-testid="stSidebar"] svg {{
     fill: var(--color-text-secondary) !important;
     color: var(--color-text-secondary) !important;
+}}
+/* Tactile Matte Segmented Switch untuk Jenis Kelamin (44px tap target, 3.3:1 boundary) */
+section[data-testid="stSidebar"] div.stElementContainer:has(div[data-testid="stRadio"]),
+section[data-testid="stSidebar"] div[data-testid="stRadio"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"] > div {{
+    width: 100% !important;
+    max-width: 100% !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[data-testid="stWidgetLabel"] {{
+    margin-bottom: 6px !important;
+    min-height: 0 !important;
+}}
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] div[data-testid="stWidgetLabel"] p {{
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    color: #A1A8B8 !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] {{
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    gap: 4px !important;
+    background-color: #0B0D12 !important;
+    border: 1px solid #242936 !important;
+    border-radius: 9px !important;
+    padding: 3px !important;
+    min-height: 0 !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > div {{
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label {{
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    min-height: 44px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: transparent !important;
+    border: 1px solid transparent !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"] > div {{
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    gap: 0 !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"] > div > div:first-child,
+section[data-testid="stSidebar"] label[data-baseweb="radio"] > div:first-of-type {{
+    display: none !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"]:hover,
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label:hover {{
+    background-color: #151923 !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"][data-selected="true"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"]:has(input:checked),
+section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {{
+    background-color: #1E2330 !important;
+    border-color: #5B657A !important;
+    box-shadow: none !important;
+}}
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"] p,
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label p {{
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #9CA3AF !important;
+    text-align: center !important;
+    margin: 0 !important;
+}}
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"][data-selected="true"] p,
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stRadioOption"]:has(input:checked) p,
+.stApp section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) p {{
+    color: #F4F6F9 !important;
+    font-weight: 600 !important;
+}}
+/* Symmetrical Sliders & Pure Typographic Readouts */
+section[data-testid="stSidebar"] div[data-testid="stSlider"] {{
+    padding-top: 2px !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 0 !important;
+}}
+section[data-testid="stSidebar"] div[data-testid="stSlider"] [data-testid="stSliderThumbValue"],
+section[data-testid="stSidebar"] div[data-testid="stSlider"] [data-testid="stSliderTickBar"],
+section[data-testid="stSidebar"] div[data-testid="stSlider"] [data-testid="stSliderTickBarMin"],
+section[data-testid="stSidebar"] div[data-testid="stSlider"] [data-testid="stSliderTickBarMax"],
+section[data-testid="stSidebar"] div[data-testid="stSlider"] [data-testid="stThumbValue"],
+section[data-testid="stSidebar"] div[data-testid="stSlider"] [data-testid="stTickBarMin"],
+section[data-testid="stSidebar"] div[data-testid="stSlider"] [data-testid="stTickBarMax"] {{
+    display: none !important;
+}}
+.sb-head {{
+    padding: 0 2px 6px;
+    margin-bottom: 0;
+}}
+.sb-title {{
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+    margin: 0;
+    letter-spacing: -0.015em;
+}}
+.sb-sub {{
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-tertiary);
+    margin: 2px 0 0;
+    line-height: 1.4;
+}}
+.ctrl-row {{
+    border-top: 1px solid #1E222D;
+    margin-top: 8px;
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}}
+.ctrl-lbl {{
+    font-size: 13px;
+    font-weight: 500;
+    color: #A1A8B8;
+}}
+.ctrl-readout {{
+    font-size: 14px;
+    font-weight: 600;
+    color: #F4F6F9;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+}}
+.ctrl-readout small {{
+    font-size: 12px;
+    font-weight: 400;
+    color: #8A92A3 !important;
+    margin-left: 2px;
 }}
 
 /* Headings & Body */
@@ -560,7 +1022,7 @@ div[data-testid="stExpander"] summary p {{
 div[data-testid="stFileUploader"] button {{
     background-color: var(--color-well) !important;
     color: var(--color-text-primary) !important;
-    border: 1px solid var(--color-border-strong) !important;
+    border: 1px solid var(--color-input-border) !important;
     border-radius: var(--radius-md) !important;
 }}
 .st-key-clear_hist > div > button:hover,
@@ -573,48 +1035,57 @@ div[data-testid="stFileUploader"] button:hover {{
     color: var(--color-text-primary) !important;
 }}
 
-/* Page Header */
+/* Page Header: 2-Column Precision Grid (Judul Kiri, Kartu Identitas Kanan) */
 .page-header {{
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    gap: var(--space-4);
-    padding: 0 0 var(--space-6);
-    margin-bottom: var(--space-6);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-6);
+    padding: 0 0 var(--space-4);
+    margin-bottom: var(--space-4);
     border-bottom: 1px solid var(--color-border);
 }}
 .page-title {{
-    font-size: var(--text-2xl);
-    font-weight: 600;
-    line-height: 1.25;
-    margin: 0 0 var(--space-2);
+    font-size: clamp(20px, 2.2vw, 26px);
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0 0 4px;
     color: var(--color-text-primary);
     letter-spacing: -0.02em;
 }}
 .page-sub {{
-    font-size: var(--text-sm);
+    font-size: 13px;
     font-weight: 400;
     color: var(--color-text-secondary);
     margin: 0;
-    max-width: 660px;
-    line-height: 1.5;
+    line-height: 1.45;
 }}
 .page-id {{
-    text-align: right;
+    justify-self: end;
+    text-align: left;
     font-size: var(--text-xs);
     color: var(--color-text-secondary);
-    line-height: 1.5;
+    line-height: 1.55;
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    white-space: nowrap;
+}}
+.page-id-kicker {{
+    display: block;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--color-text-tertiary);
+    margin-bottom: 2px;
 }}
 .page-id strong {{
     color: var(--color-text-primary);
     font-weight: 600;
     display: block;
     font-size: var(--text-sm);
+    margin-bottom: 2px;
 }}
 
 /* Tabs */
@@ -643,7 +1114,7 @@ div[data-baseweb="tab-highlight"] {{
     height: 2px !important;
 }}
 
-/* Tinted Pill Badges & Metric Tiles (Inspirasi Kartu Referensi) */
+/* Architectural Status Tags & Metric Tiles */
 .pill-row {{
     display: flex;
     flex-wrap: wrap;
@@ -654,8 +1125,8 @@ div[data-baseweb="tab-highlight"] {{
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
-    padding: var(--space-1) var(--space-3);
-    border-radius: 24px;
+    padding: 4px 10px;
+    border-radius: 6px;
     font-size: var(--text-xs);
     font-weight: 500;
     line-height: 1.5;
@@ -667,80 +1138,118 @@ div[data-baseweb="tab-highlight"] {{
 }}
 .pill-emerald {{
     background-color: #10231D;
-    border-color: #173F31;
+    border-color: #1F5C46;
     color: #34D399;
 }}
 .pill-blue {{
     background-color: #111C30;
-    border-color: #1E3A5F;
+    border-color: #274C7E;
     color: #60A5FA;
 }}
 .pill-amber {{
     background-color: #241D11;
-    border-color: #4D3814;
+    border-color: #664B1B;
     color: #FBBF24;
 }}
 .pill-rose {{
     background-color: #261419;
-    border-color: #541B29;
+    border-color: #6E2436;
     color: #FB7185;
 }}
 
-/* Sidebar Card Summary */
+/* Sidebar Architectural Readout Card (Focal Point + Clean Tabular Ledger) */
 .rail-card {{
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4);
-    margin: var(--space-3) 0 var(--space-4);
+    background-color: #13161D;
+    border: 1px solid #252A36;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 2px 0 6px;
+    box-shadow: none;
 }}
-.rail-head {{
+.rail-lbl {{
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #A1A8B8;
+    margin: 0 0 6px;
+}}
+.rail-hero {{
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: var(--space-2);
-    margin-bottom: var(--space-2);
-}}
-.rail-title {{
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--color-text-primary);
-    margin: 0;
-}}
-.rail-weight {{
-    font-size: var(--text-base);
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    margin: 0;
-}}
-.rail-bmi-well {{
-    background-color: var(--color-well);
-    border: 1px solid #1C1F27;
-    border-radius: var(--radius-md);
-    padding: var(--space-3);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    gap: 8px;
 }}
 .rail-val {{
-    font-size: var(--text-xl);
+    font-size: 28px;
     font-weight: 600;
-    color: var(--color-text-primary);
-    line-height: 1.25;
+    color: #F4F6F9;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
     margin: 0;
 }}
 .rail-unit {{
-    font-size: var(--text-xs);
+    font-size: 13px;
     font-weight: 400;
-    color: var(--color-text-secondary);
-    margin-left: var(--space-1);
+    color: #8A92A3;
+    letter-spacing: 0;
+    margin-left: 4px;
+}}
+.rail-ledger {{
+    border-top: 1px solid #1F2430;
+    margin-top: 14px;
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}}
+.rail-row {{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12.5px;
+    line-height: 1.35;
+}}
+.rail-k {{
+    color: #A1A8B8;
+    font-weight: 400;
+}}
+.rail-v {{
+    color: #F4F6F9;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}}
+section[data-testid="stSidebar"] .stButton > button {{
+    min-height: 44px !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+    background-color: #1A1E28 !important;
+    color: #F4F6F9 !important;
+    border: 1px solid #5B6478 !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease !important;
+}}
+section[data-testid="stSidebar"] .stButton > button:hover {{
+    background-color: #232938 !important;
+    border-color: #7D89A3 !important;
+    color: #FFFFFF !important;
+}}
+section[data-testid="stSidebar"] .stButton > button:active {{
+    background-color: #13161E !important;
+    border-color: #5B6478 !important;
+    transform: translateY(1px);
 }}
 
 /* Status Tag */
 .status-tag {{
     display: inline-block;
-    padding: var(--space-1) var(--space-3);
-    border-radius: 24px;
+    padding: 4px 10px;
+    border-radius: 6px;
     font-size: var(--text-xs);
     font-weight: 600;
     border: 1px solid var(--color-border);
@@ -748,6 +1257,122 @@ div[data-baseweb="tab-highlight"] {{
 }}
 .status-tag-sm {{
     margin-left: var(--space-2);
+}}
+
+/* Tab 1 Random Forest Main Spotlight Card */
+.rf-spotlight {{
+    background-color: #101726;
+    border: 1px solid #1E3A5F;
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 0 0 1px #172A46;
+    padding: var(--space-4) var(--space-6);
+    margin-bottom: var(--space-4);
+}}
+.rf-top {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid #1B2D48;
+}}
+.rf-kicker {{
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #60A5FA;
+    text-transform: uppercase;
+}}
+.rf-grid {{
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: var(--space-4);
+    align-items: center;
+}}
+.rf-main-lbl {{
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    margin: 0 0 var(--space-1);
+}}
+.rf-main-val {{
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-2);
+    line-height: 1.25;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}}
+.rf-meta {{
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}}
+.rf-meta b {{
+    color: var(--color-text-primary);
+    font-weight: 600;
+}}
+.rf-probs {{
+    background-color: var(--color-well);
+    border: 1px solid #1C2536;
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+}}
+.rf-prob-title {{
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin: 0 0 var(--space-2);
+}}
+.rf-mini-row {{
+    margin-bottom: var(--space-2);
+}}
+.rf-mini-row:last-child {{
+    margin-bottom: 0;
+}}
+.rf-mini-head {{
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--text-xs);
+    color: var(--color-text-primary);
+    margin-bottom: 3px;
+}}
+.rf-mini-track {{
+    height: 6px;
+    background-color: #161B24;
+    border-radius: 12px;
+    overflow: hidden;
+}}
+.rf-mini-fill {{
+    height: 100%;
+    border-radius: 12px;
+}}
+
+/* Tab 5 Calorie & Energy Expenditure Grid */
+.cal-grid {{
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: var(--space-3) 0 var(--space-4);
+}}
+.cal-summary-box {{
+    background-color: var(--color-well);
+    border: 1px solid #1C1F27;
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}}
+.cal-summary-box strong {{
+    color: var(--color-text-primary);
+    font-weight: 600;
 }}
 
 /* Tab 1 Luxury Diagnostic Card (Inspirasi Kartu Kiri & Kanan) */
@@ -963,8 +1588,8 @@ div[data-baseweb="tab-highlight"] {{
     padding: var(--space-2) var(--space-3);
     color: var(--color-text-primary);
     border-bottom: 1px solid #1A1D24;
+    white-space: normal;
 }}
-.data-tbl td {{ white-space: nowrap; }}
 .data-tbl tbody tr:last-child td, .who-tbl tbody tr:last-child td {{ border-bottom: none; }}
 .data-tbl tbody tr:hover td {{ background-color: var(--color-surface); }}
 .who-row-active {{ background-color: var(--color-surface-subtle); }}
@@ -1200,12 +1825,12 @@ div[data-baseweb="tab-highlight"] {{
 .clock-tz {{
     margin-left: auto;
     font-size: var(--text-xs);
-    font-weight: 600;
-    color: #60A5FA;
-    background-color: #111C30;
-    border: 1px solid #1E3A5F;
-    border-radius: 24px;
-    padding: var(--space-1) var(--space-3);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background-color: var(--color-well);
+    border: 1px solid var(--color-border-strong);
+    border-radius: 6px;
+    padding: 3px 10px;
 }}
 div[data-testid="stCustomComponentV1"]:has(iframe[height="0"]) {{
     height: 0 !important;
@@ -1239,17 +1864,40 @@ div[data-testid="stCustomComponentV1"]:has(iframe[height="0"]) {{
     background-color: var(--color-border);
 }}
 
-@media (max-width: 768px) {{
+/* Multi-state responsive reflow: tablet/small-laptop (<= 1120px) dan mobile (<= 640px) */
+@media (max-width: 1120px) {{
     .block-container {{
         padding-top: var(--space-4);
         padding-bottom: var(--space-8);
     }}
-    .page-id {{ text-align: left; }}
+    .page-header {{
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }}
+    .page-id {{
+        justify-self: start;
+        white-space: normal;
+    }}
     .diag-hero {{ padding: var(--space-4); }}
-    .tile-grid {{ grid-template-columns: 1fr; }}
+    .rf-spotlight {{ padding: var(--space-4); }}
+    .rf-grid {{ grid-template-columns: 1fr; }}
+    .tile-grid {{ grid-template-columns: 1fr 1fr; }}
+    .cal-grid {{ grid-template-columns: 1fr 1fr; }}
     .stat-strip {{ grid-template-columns: 1fr 1fr; }}
     div[data-baseweb="tab-list"] {{ gap: var(--space-4); }}
     .clock-tz {{ margin-left: 0; }}
+}}
+@media (max-width: 640px) {{
+    .block-container {{
+        padding-top: var(--space-3);
+        padding-bottom: var(--space-6);
+        padding-left: var(--space-3);
+        padding-right: var(--space-3);
+    }}
+    .diag-hero, .cat-banner, .stat-cell {{ padding: var(--space-3); }}
+    .tile-grid, .cal-grid, .stat-strip, .sim-grid {{ grid-template-columns: 1fr; }}
+    .hero-title, .cat-banner-title {{ font-size: 18px; }}
+    div[data-baseweb="tab-list"] {{ gap: var(--space-3); }}
 }}
 @media (prefers-reduced-motion: reduce) {{
     *, *::before, *::after {{
@@ -1257,6 +1905,8 @@ div[data-testid="stCustomComponentV1"]:has(iframe[height="0"]) {{
         transition-duration: 0.01ms !important;
     }}
 }}
+{REDESIGN_CSS}
+{HIDE_TOOLBAR_CSS}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1402,6 +2052,18 @@ SUB_LABEL_EN = {
 
 def format_sub_label(idx):
     return SUB_LABEL_EN.get(idx, LABEL_MAP[idx])
+
+SUB_LABEL_ID = {
+    0: "Kekurangan Berat Parah",
+    1: "Kurang Berat Badan",
+    2: "Berat Ideal",
+    3: "Pra-Obesitas",
+    4: "Obesitas Kelas I-II",
+    5: "Obesitas Kelas III",
+}
+
+def format_sub_label_id(idx):
+    return SUB_LABEL_ID.get(idx, LABEL_ID[idx])
 
 @st.cache_data(show_spinner=False)
 def simulate_curve(gender, height, w_lo, w_hi):
@@ -1613,14 +2275,14 @@ def draw_human_silhouette(height, weight, gender, idx):
     ax.plot([xd, xd], [0.0, 1.0*H], color=TXT_SUB, linewidth=0.8, zorder=2)
     for yv in (0.0, 1.0*H):
         ax.plot([xd-0.015, xd+0.015], [yv, yv], color=TXT_SUB, linewidth=0.8)
-    ax.text(xd+0.035, 0.5*H, f"{height} cm", color=TXT_SUB, fontsize=8, va="center", ha="left", rotation=90)
+    ax.text(xd+0.035, 0.5*H, f"{height} cm", color=TXT_SUB, fontsize=9, va="center", ha="left", rotation=90)
 
-    ax.text(0, 1.0*H+0.09, f"{LABEL_ID[idx]}  ·  BMI {bmi:.1f}", ha="center", fontsize=9,
+    ax.text(0, 1.0*H+0.09, f"{LABEL_ID[idx]}  ·  IMT {bmi:.1f}".replace(".", ","), ha="center", fontsize=9,
             fontweight="bold", color=TXT_BODY)
     if abs(bmi - 22.0) > 2.0:
-        ax.text(0, 1.0*H+0.15, "- - -  siluet BMI ideal (22)", ha="center", fontsize=7, color=TXT_SUB)
+        ax.text(0, 1.0*H+0.15, "- - -  siluet IMT ideal (22)", ha="center", fontsize=7, color=TXT_SUB)
 
-    ax.set_xlim(-0.46, 0.50); ax.set_ylim(1.36, -0.06)
+    ax.set_xlim(-0.46, 0.50); ax.set_ylim(max(1.36, 1.0*H + 0.22), -0.06)
     ax.set_aspect("equal", adjustable="box"); ax.axis("off")
     plt.tight_layout(pad=0.2)
     return fig
@@ -1667,44 +2329,86 @@ def _clock_body():
 live_clock = _clock_body
 
 with st.sidebar:
-    st.markdown("### Input Data Antropometri")
-    st.caption("Hasil diperbarui otomatis saat slider digeser.")
-    st.markdown("<hr class='gold-rule'>", unsafe_allow_html=True)
-    gender=st.radio("Jenis Kelamin",["Male","Female"],format_func=lambda x:"Laki-laki" if x=="Male" else "Perempuan")
-    height=st.slider("Tinggi Badan (cm)",140,200,170)
-    weight=st.slider("Berat Badan (kg)",35,165,70)
-    target_w=st.slider("Target Berat Badan (kg)",35,165,65)
+    st.markdown(
+        '<div class="sb-head">'
+        '<p class="sb-title">Parameter Tubuh</p>'
+        '<p class="sb-sub">Prediksi diperbarui otomatis</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    with st.container(border=True):
+        gender = st.radio(
+            "Jenis Kelamin",
+            ["Male", "Female"],
+            horizontal=True,
+            format_func=lambda x: "Laki-laki" if x == "Male" else "Perempuan",
+        )
+        st.markdown(
+            f'<div class="ctrl-row"><span class="ctrl-lbl">Tinggi Badan</span>'
+            f'<span class="ctrl-readout">{st.session_state.inp_height}<small>cm</small></span></div>',
+            unsafe_allow_html=True,
+        )
+        height = st.slider("Tinggi Badan (cm)", 140, 200, key="inp_height", label_visibility="collapsed")
+
+        st.markdown(
+            f'<div class="ctrl-row"><span class="ctrl-lbl">Berat Badan</span>'
+            f'<span class="ctrl-readout">{st.session_state.inp_weight}<small>kg</small></span></div>',
+            unsafe_allow_html=True,
+        )
+        weight = st.slider("Berat Badan (kg)", 35, 165, key="inp_weight", label_visibility="collapsed")
+
+        st.markdown(
+            f'<div class="ctrl-row"><span class="ctrl-lbl">Target Berat</span>'
+            f'<span class="ctrl-readout">{st.session_state.inp_target}<small>kg</small></span></div>',
+            unsafe_allow_html=True,
+        )
+        target_w = st.slider("Target Berat Badan (kg)", 35, 165, key="inp_target", label_visibility="collapsed")
 
     bmi_val=weight/(height/100)**2
     bi=bmi_index(bmi_val)
 
-    if st.session_state.last_idx is not None and st.session_state.last_idx != bi:
-        st.toast(f"Kategori berubah menjadi {LABEL_ID[bi]}")
-    st.session_state.last_idx = bi
+    prob_main = np.zeros(6)
+    if model_loaded:
+        fv_main = build_feature_vector(gender, height, weight)
+        fv_main_sc = scaler.transform([fv_main])
+        pred_main = int(model.predict(fv_main_sc)[0])
+        proba_raw = model.predict_proba(fv_main_sc)[0]
+        for idx_c, cls_c in enumerate(model.classes_):
+            prob_main[int(cls_c)] = proba_raw[idx_c]
+        conf_main = float(np.max(prob_main) * 100.0)
+    else:
+        pred_main = bi
+        prob_main[bi] = 1.0
+        conf_main = 100.0
+
+    if st.session_state.last_idx is not None and st.session_state.last_idx != pred_main:
+        st.toast(f"Prediksi Random Forest: {LABEL_ID[pred_main]}")
+    st.session_state.last_idx = pred_main
 
     il=round(18.5*(height/100)**2); ih=round(24.9*(height/100)**2)
     bmi_t_side=target_w/((height/100)**2)
+    bmi_side_str = f"{bmi_val:.1f}".replace(".", ",")
+    bmit_side_str = f"{bmi_t_side:.1f}".replace(".", ",")
+    bp_side = min(max((bmi_val - 10.0) / 40.0 * 100.0, 2.0), 98.0)
     st.markdown(
         f'<div class="rail-card">'
-        f'<div class="rail-head"><p class="rail-title">Berat Saat Ini</p><p class="rail-weight">{weight:.1f} kg</p></div>'
-        f'<div class="rail-bmi-well">'
-        f'<p class="rail-val">{bmi_val:.1f}<span class="rail-unit">kg/m²</span></p>'
-        f'<span class="status-tag tag-c{bi}">{LABEL_ID[bi]}</span>'
+        f'<span class="rail-lbl">Indeks Massa Tubuh</span>'
+        f'<div class="rail-hero">'
+        f'<p class="rail-val">{bmi_side_str}<span class="rail-unit">kg/m²</span></p>'
+        f'<span class="status-tag tag-c{pred_main}">{LABEL_ID[pred_main]}</span>'
         f'</div>'
-        f'<div class="pill-row">'
-        f'<span class="tint-pill pill-emerald">Ideal: <b>{il}–{ih} kg</b></span>'
-        f'<span class="tint-pill pill-amber">Target: <b>{target_w} kg</b></span>'
-        f'<span class="tint-pill pill-blue">IMT Target: <b>{bmi_t_side:.1f}</b></span>'
+        f'<div class="rail-meter"><i style="left:{bp_side:.2f}%"></i></div>'
+        f'<div class="rail-ledger">'
+        f'<div class="rail-row"><span class="rail-k">Prediksi RF</span><span class="rail-v">{LABEL_ID[pred_main]} · {conf_main:.0f}%</span></div>'
+        f'<div class="rail-row"><span class="rail-k">Rentang Ideal</span><span class="rail-v">{il}–{ih} kg</span></div>'
+        f'<div class="rail-row"><span class="rail-k">Target Berat</span><span class="rail-v">{target_w} kg · IMT {bmit_side_str}</span></div>'
         f'</div>'
         f'</div>',
         unsafe_allow_html=True,
     )
 
-    if st.button("Simpan ke Riwayat", type="primary", use_container_width=True):
-        pred_lbl="-"
-        if model_loaded:
-            fv_s=build_feature_vector(gender,height,weight)
-            pred_lbl=LABEL_ID[int(model.predict(scaler.transform([fv_s]))[0])]
+    if st.button("Simpan ke Riwayat", type="primary", use_container_width=True, icon=":material/bookmark_add:"):
+        pred_lbl = LABEL_ID[pred_main] if model_loaded else "-"
         st.session_state.riwayat.append({
             "Waktu (WIB)": fmt_waktu_riwayat(datetime.now(WIB)),
             "Gender": "Laki-laki" if gender=="Male" else "Perempuan",
@@ -1712,24 +2416,31 @@ with st.sidebar:
             "Berat (kg)": weight,
             "BMI": round(bmi_val,2),
             "Kategori (IMT)": LABEL_ID[bi],
-            "Prediksi ML": pred_lbl,
+            "Prediksi Random Forest": pred_lbl,
         })
         st.toast("Pengukuran tersimpan ke riwayat")
 
 st.markdown("""
 <div class="page-header">
 <div>
-<h1 class="page-title">BMI Analyzer</h1>
-<p class="page-sub">Klasifikasi kategori Indeks Massa Tubuh menggunakan simulasi citra biner dan machine learning berbasis data antropometri</p>
+<h1 class="page-title">Klasifikasi Indeks Massa Tubuh (IMT)</h1>
+<p class="page-sub">Simulasi Citra Siluet Biner OpenCV &amp; Algoritma Random Forest Berbasis Data Antropometri</p>
 </div>
 <div class="page-id">
+<span class="page-id-kicker">Skripsi S1 Informatika · AMIKOM Yogyakarta</span>
 <strong>Satrio Raja Nabil Rizky (23.11.5538)</strong>
-Skripsi S1 Informatika, Universitas AMIKOM Yogyakarta
+<span class="page-id-line">Pembimbing: Mulia Sulistiyono, S.Kom., M.Kom.</span>
 </div>
 </div>
 """, unsafe_allow_html=True)
 
-t1,t2,t3,t4,t5=st.tabs(["Kalkulator BMI","Analisis Data (n=3,700)","Distribusi Probabilitas","Evaluasi 6 Model ML","Rekomendasi"])
+t1,t2,t3,t4,t5=st.tabs([
+    "Klasifikasi IMT",
+    "Analisis Data (n=3.700)",
+    "Distribusi Probabilitas",
+    "Evaluasi 6 Model ML",
+    "Rekomendasi & Kalori",
+])
 
 with t1:
     ca,cb=st.columns([1,1.85])
@@ -1738,9 +2449,9 @@ with t1:
             st.markdown("#### Siluet Tubuh")
             fig_s=draw_human_silhouette(height,weight,gender,bi)
             st.pyplot(fig_s,use_container_width=True); plt.close(fig_s)
-            st.caption("Ilustrasi 3D tampak depan (proporsi anatomi ±8 kepala, distribusi lemak mengikuti BMI). Garis putus-putus menandai pembanding BMI ideal 22.")
+            st.caption("Ilustrasi 3D proporsional (±8 kepala). Garis putus-putus = pembanding IMT ideal 22.")
 
-        with st.expander("Citra Biner OpenCV & Fitur Morfologi", expanded=False):
+        with st.expander("Citra Biner OpenCV & 5 Fitur Morfologi", expanded=False):
             img_cv = generate_body_silhouette(height, weight, gender)
             img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_GRAY2RGB)
             cnts, _ = cv2.findContours(img_cv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -1756,77 +2467,69 @@ with t1:
         if weight < il:
             diff = il - weight
             gap_short = f"-{diff:.1f} kg".replace(".", ",")
-            gap_sub = f"Kurang dari ideal ({il}–{ih} kg)"
+            gap_sub = f"Rentang WHO {il}–{ih} kg"
             gap_tile_cls = "tile-amber"
         elif weight > ih:
             diff = weight - ih
             gap_short = f"+{diff:.1f} kg".replace(".", ",")
-            gap_sub = f"Lebih dari ideal ({il}–{ih} kg)"
+            gap_sub = f"Rentang WHO {il}–{ih} kg"
             gap_tile_cls = "tile-rose"
         else:
             gap_short = "0,0 kg (Ideal)"
-            gap_sub = f"Dalam rentang WHO ({il}–{ih} kg)"
+            gap_sub = f"Rentang WHO {il}–{ih} kg"
             gap_tile_cls = "tile-emerald"
 
         bmi_t = target_w / ((height / 100) ** 2)
         cat_t = bmi_index(bmi_t)
         d_t = weight - target_w
-        delta_t_str = (f"-{d_t:.1f} kg" if d_t > 0 else f"+{-d_t:.1f} kg" if d_t < 0 else "0,0 kg").replace(".", ",")
+        delta_t_str = (f"-{d_t:.0f} kg" if d_t > 0 else f"+{-d_t:.0f} kg" if d_t < 0 else "Tercapai")
 
-        if model_loaded:
-            fv = build_feature_vector(gender, height, weight)
-            fv_sc = scaler.transform([fv])
-            pred = int(model.predict(fv_sc)[0])
-            proba = model.predict_proba(fv_sc)[0]
-            conf = max(proba) * 100
-            rf_val_str = f"{LABEL_ID[pred]}"
-            rf_sub_str = f"Keyakinan {conf:.1f}% · RF 80:20".replace(".", ",")
-        else:
-            pred = bi
-            conf = 0.0
-            rf_val_str = LABEL_ID[bi]
-            rf_sub_str = "Fallback standar WHO"
-
-        gauge_svg_html = build_bmi_gauge_svg(bmi_val, bi, LABEL_ID[bi])
+        pred = pred_main
+        conf = conf_main
+        gauge_svg_html = build_bmi_gauge_svg(bmi_val, pred, LABEL_ID[pred])
         bp = min(max((bmi_val - 10.0) / 40.0 * 100.0, 2.0), 98.0)
         bmi_comma = f"{bmi_val:.1f}".replace(".", ",")
-        weight_comma = f"{weight:.1f}".replace(".", ",")
-        target_comma = f"{target_w:.1f}".replace(".", ",")
+        conf_comma = f"{conf:.1f}%".replace(".", ",")
+        weight_comma = f"{weight:.0f}"
         bmit_comma = f"{bmi_t:.1f}".replace(".", ",")
         gender_id = "Laki-laki" if gender == "Male" else "Perempuan"
 
+        # Satu Kartu Utama Terpadu: Sorotan Random Forest + 3 Metrik Kunci + Arc Gauge + Bar IMT
         st.markdown(
             f'<div class="diag-hero">'
             f'<div class="hero-top">'
-            f'<div><p class="hero-title">Profil Antropometri &amp; IMT</p>'
-            f'<p class="hero-sub">{gender_id} · Tinggi {height} cm · Area Siluet {int(f_img[0])} px²</p></div>'
-            f'<p class="hero-reading"><b>{weight_comma} kg</b> · {height} cm</p>'
+            f'<div>'
+            f'<p class="hero-title">Prediksi Random Forest</p>'
+            f'<p class="hero-sub">Model Terbaik (Akurasi 99,73% · 16 Fitur) · {gender_id}, {height} cm, {weight_comma} kg</p>'
+            f'</div>'
+            f'<span class="tint-pill pill-emerald">Akurasi RF: <b>99,73%</b> (Puncak 99,78%)</span>'
             f'</div>'
             f'<div class="tile-grid">'
+            f'<div class="metric-tile tile-blue">'
+            f'<p class="tile-lbl">Klasifikasi Random Forest</p>'
+            f'<p class="tile-val tone-c{pred}">{LABEL_ID[pred]}</p>'
+            f'<p class="tile-meta">Keyakinan {conf_comma} · {format_sub_label_id(pred)}</p>'
+            f'<div class="conf-bar"><i style="width:{min(conf, 100.0):.1f}%"></i></div>'
+            f'</div>'
             f'<div class="metric-tile {gap_tile_cls}">'
             f'<p class="tile-lbl">Selisih Berat Ideal</p>'
             f'<p class="tile-val">{gap_short}</p>'
             f'<p class="tile-meta">{gap_sub}</p>'
             f'</div>'
             f'<div class="metric-tile tile-amber">'
-            f'<p class="tile-lbl">Target Berat Badan</p>'
-            f'<p class="tile-val">{target_comma} kg ({delta_t_str})</p>'
-            f'<p class="tile-meta">IMT Target {bmit_comma} · {LABEL_ID[cat_t]}</p>'
-            f'</div>'
-            f'<div class="metric-tile tile-blue">'
-            f'<p class="tile-lbl">Prediksi Random Forest</p>'
-            f'<p class="tile-val">{rf_val_str}</p>'
-            f'<p class="tile-meta">{rf_sub_str}</p>'
+            f'<p class="tile-lbl">Target Berat</p>'
+            f'<p class="tile-val">{target_w} kg ({delta_t_str})</p>'
+            f'<p class="tile-meta">IMT {bmit_comma} · {LABEL_ID[cat_t]}</p>'
             f'</div>'
             f'</div>'
             f'{gauge_svg_html}'
             f'<div class="capsule-bar-wrap">'
             f'<div class="capsule-head">'
             f'<span class="capsule-title">Indeks Massa Tubuh: <b>{bmi_comma} kg/m²</b></span>'
-            f'<span class="capsule-status tone-c{bi}">{LABEL_ID[bi]} ({format_sub_label(bi)})</span>'
+            f'<span class="capsule-status tone-c{pred}">{LABEL_ID[pred]} ({format_sub_label_id(pred)})</span>'
             f'</div>'
             f'<div class="capsule-track">'
-            f'<div class="capsule-active-zone zone-{bi}"></div>'
+            f'<div class="capsule-active-zone zone-{pred}"></div>'
             f'<div class="capsule-pointer" style="left:{bp:.2f}%"></div>'
             f'</div>'
             f'<div class="ruler-ticks">'
@@ -2180,7 +2883,7 @@ with t4:
             plt.tight_layout(); st.pyplot(fig,use_container_width=True); plt.close(fig)
 
     with st.container(border=True):
-        st.markdown("#### Studi Ablasi Fitur: Kontribusi 5 Fitur Morfologi Citra Siluet (5-Seed Evaluation)")
+        st.markdown("#### Uji Kontribusi Fitur (Studi Ablasi): Peran 5 Fitur Morfologi Citra Siluet")
         st.caption(
             "Pengujian Random Forest pada 5 random seed (42, 7, 123, 2024, 999) dengan split 80:20 (n = 3.700) "
             "untuk mengukur daya diskriminatif 5 fitur morfologi citra biner (pixel_area, aspect_ratio, body_density, contour_perimeter, compactness)."
@@ -2236,16 +2939,168 @@ with t4:
             st.warning(f"Gagal memuat Confusion Matrix: {e}")
 
 with t5:
-    st.markdown("#### Rekomendasi Kesehatan Personal")
-    rec=RECOMMENDATIONS[bi]
+    st.markdown("#### Rekomendasi Kesehatan & Kalkulasi Pembakaran Kalori Personal")
+    rec=RECOMMENDATIONS[pred_main]
+    gender_lbl_t5 = "Laki-laki" if gender == "Male" else "Perempuan"
     st.markdown(
         f'<div class="cat-banner">'
-        f'<p class="cat-banner-title tone-c{bi}">{rec["title"]}</p>'
-        f'<p class="cat-banner-meta">Kategori <strong class="cat-meta-em">{LABEL_ID[bi]}</strong> ({LABEL_MAP[bi]}), '
-        f'BMI <strong class="cat-meta-em">{bmi_val:.1f}</strong>, tinggi {height} cm, berat {weight} kg</p>'
+        f'<p class="cat-banner-title tone-c{pred_main}">{rec["title"]}</p>'
+        f'<p class="cat-banner-meta">Hasil Klasifikasi Random Forest: <strong class="cat-meta-em">{LABEL_ID[pred_main]}</strong> '
+        f'({format_sub_label_id(pred_main)}) · IMT <strong class="cat-meta-em">{bmi_val:.2f} kg/m²</strong> · '
+        f'{gender_lbl_t5}, Tinggi <strong class="cat-meta-em">{height} cm</strong>, Berat <strong class="cat-meta-em">{weight} kg</strong></p>'
         f'</div>', unsafe_allow_html=True)
 
-    st.markdown('<p class="section-lead">Centang kebiasaan yang sudah kamu jalani:</p>', unsafe_allow_html=True)
+    # Kalkulator BMR, TDEE, Defisit/Surplus Energi, dan Target Pembakaran Kalori Olahraga (Mifflin-St Jeor + Wishnofsky + METs)
+    with st.container(border=True):
+        st.markdown("#### Kalkulasi Kebutuhan Energi & Target Pembakaran Kalori (Berbasis BB & TB)")
+        st.caption(
+            "Dihitung menggunakan persamaan klinis Mifflin-St Jeor (BMR & TDEE), kesetaraan energi jaringan adiposa Wishnofsky "
+            "(1 kg ≈ 7.700 kkal), dan rumus Metabolic Equivalent of Task (MET) sesuai berat badan Anda."
+        )
+        kc1, kc2 = st.columns([1, 1.6])
+        with kc1:
+            usia_thn = st.slider("Usia (Tahun)", 15, 80, 22, key="cal_age")
+        with kc2:
+            PAL_OPTIONS = [
+                ("Sangat Jarang Olahraga / Sedenter (×1,20)", 1.20),
+                ("Aktivitas Ringan: Olahraga 1–3 hari/minggu (×1,375)", 1.375),
+                ("Aktivitas Sedang: Olahraga 3–5 hari/minggu (×1,55)", 1.55),
+                ("Aktivitas Berat: Olahraga 6–7 hari/minggu (×1,725)", 1.725),
+            ]
+            pal_choice = st.selectbox(
+                "Tingkat Aktivitas Fisik Harian",
+                options=range(len(PAL_OPTIONS)),
+                index=1,
+                format_func=lambda i: PAL_OPTIONS[i][0],
+                key="cal_pal",
+            )
+            pal_factor = PAL_OPTIONS[pal_choice][1]
+
+        bmr_val = (10.0 * weight) + (6.25 * height) - (5.0 * usia_thn) + (5.0 if gender == "Male" else -161.0)
+        tdee_val = bmr_val * pal_factor
+        min_safe_intake = 1500 if gender == "Male" else 1200
+
+        def _fmt_ribuan(n):
+            return f"{int(round(n)):,}".replace(",", ".")
+
+        if weight > ih:
+            selisih_ideal_kg = weight - ih
+            total_kalori_ideal = selisih_ideal_kg * 7700.0
+            daily_deficit = 500 if pred_main <= 3 else 600
+            burn_sport_day = 300 if pred_main <= 3 else 350
+            diet_cut_day = daily_deficit - burn_sport_day
+            intake_target = max(min_safe_intake, round(tdee_val - diet_cut_day))
+            est_days = max(1, int(np.ceil(total_kalori_ideal / daily_deficit)))
+            est_weeks = round(est_days / 7.0, 1)
+            burn_tile_cls = "tile-rose"
+            burn_lbl = "Target Kalori Dibakar (Olahraga)"
+            burn_val_str = f"{_fmt_ribuan(burn_sport_day)} kkal/hari"
+            burn_meta_str = f"+ Kurangi makan {_fmt_ribuan(diet_cut_day)} kkal = Defisit {_fmt_ribuan(daily_deficit)} kkal/hari"
+            narasi_kalori = (
+                f"Dengan tinggi <strong>{height} cm</strong> dan berat <strong>{weight} kg</strong>, berat badan berada "
+                f"<strong>+{selisih_ideal_kg:.1f} kg</strong> di atas batas atas rentang ideal WHO ({il}–{ih} kg). "
+                f"Untuk mencapai berat ideal <strong>{ih} kg</strong>, total kelebihan energi yang perlu dibakar adalah sekitar "
+                f"<strong>{_fmt_ribuan(total_kalori_ideal)} kkal</strong>. Melalui kombinasi pembakaran olahraga rutin "
+                f"<strong>{_fmt_ribuan(burn_sport_day)} kkal/hari</strong> dan pengaturan asupan makan <strong>{_fmt_ribuan(intake_target)} kkal/hari</strong> "
+                f"(total defisit aman {_fmt_ribuan(daily_deficit)} kkal/hari), rentang berat ideal diperkirakan tercapai dalam "
+                f"<strong>±{est_days} hari (±{str(est_weeks).replace('.', ',')} minggu)</strong>."
+            )
+        elif weight < il:
+            selisih_ideal_kg = il - weight
+            total_kalori_ideal = selisih_ideal_kg * 7700.0
+            surplus_day = 400
+            burn_sport_day = 180
+            intake_target = round(tdee_val + surplus_day + burn_sport_day)
+            est_days = max(1, int(np.ceil(total_kalori_ideal / surplus_day)))
+            est_weeks = round(est_days / 7.0, 1)
+            burn_tile_cls = "tile-amber"
+            burn_lbl = "Batas Kalori Latihan Otot"
+            burn_val_str = f"{_fmt_ribuan(burn_sport_day)} kkal/hari"
+            burn_meta_str = f"Jaga surplus bersih +{_fmt_ribuan(surplus_day)} kkal/hari untuk naik massa otot"
+            narasi_kalori = (
+                f"Dengan tinggi <strong>{height} cm</strong> dan berat <strong>{weight} kg</strong>, berat badan masih kurang "
+                f"<strong>{selisih_ideal_kg:.1f} kg</strong> dari batas bawah ideal WHO ({il}–{ih} kg), setara kebutuhan surplus total "
+                f"<strong>{_fmt_ribuan(total_kalori_ideal)} kkal</strong>. Fokus utama bukan membakar lemak berlebih, melainkan "
+                f"menjaga asupan padat gizi sebesar <strong>{_fmt_ribuan(intake_target)} kkal/hari</strong> (+{_fmt_ribuan(surplus_day)} kkal surplus bersih) "
+                f"disertai latihan beban terukur (<strong>±{_fmt_ribuan(burn_sport_day)} kkal/hari</strong>) selama "
+                f"<strong>±{est_days} hari (±{str(est_weeks).replace('.', ',')} minggu)</strong>."
+            )
+        else:
+            total_kalori_ideal = 0.0
+            burn_sport_day = 250
+            intake_target = round(tdee_val)
+            burn_tile_cls = "tile-emerald"
+            burn_lbl = "Kalori Olahraga Pemeliharaan"
+            burn_val_str = f"{_fmt_ribuan(burn_sport_day)} kkal/hari"
+            burn_meta_str = "Setara anjuran kebugaran WHO 150 menit/minggu"
+            narasi_kalori = (
+                f"Dengan tinggi <strong>{height} cm</strong> dan berat <strong>{weight} kg</strong>, Anda sudah berada di dalam "
+                f"rentang berat ideal WHO (<strong>{il}–{ih} kg</strong>). Pertahankan keseimbangan energi harian di sekitar "
+                f"<strong>{_fmt_ribuan(intake_target)} kkal/hari</strong> dan bakar sekitar <strong>{_fmt_ribuan(burn_sport_day)} kkal/hari</strong> "
+                f"melalui aktivitas fisik aerobik/kebugaran agar komposisi otot dan metabolisme tetap optimal."
+            )
+
+        # Tambahan informasi selisih kalori menuju Target Berat Badan pilihan user di Sidebar
+        diff_target_user = weight - target_w
+        if diff_target_user > 0:
+            target_cal_note = f"Menuju target pribadi ({target_w} kg): perlu membakar total {_fmt_ribuan(diff_target_user * 7700)} kkal (-{diff_target_user} kg)."
+        elif diff_target_user < 0:
+            target_cal_note = f"Menuju target pribadi ({target_w} kg): perlu surplus total {_fmt_ribuan((-diff_target_user) * 7700)} kkal (+{-diff_target_user} kg)."
+        else:
+            target_cal_note = f"Berat saat ini sudah tepat berada pada target pribadi ({target_w} kg)."
+
+        st.markdown(
+            f'<div class="cal-grid">'
+            f'<div class="metric-tile tile-blue">'
+            f'<p class="tile-lbl">Energi Basal (BMR)</p>'
+            f'<p class="tile-val">{_fmt_ribuan(bmr_val)} kkal/hari</p>'
+            f'<p class="tile-meta">Kebutuhan energi saat istirahat penuh</p>'
+            f'</div>'
+            f'<div class="metric-tile tile-emerald">'
+            f'<p class="tile-lbl">Kebutuhan Harian (TDEE)</p>'
+            f'<p class="tile-val">{_fmt_ribuan(tdee_val)} kkal/hari</p>'
+            f'<p class="tile-meta">Total energi harian (BMR × {str(pal_factor).replace(".", ",")})</p>'
+            f'</div>'
+            f'<div class="metric-tile {burn_tile_cls}">'
+            f'<p class="tile-lbl">{burn_lbl}</p>'
+            f'<p class="tile-val">{burn_val_str}</p>'
+            f'<p class="tile-meta">{burn_meta_str}</p>'
+            f'</div>'
+            f'<div class="metric-tile tile-amber">'
+            f'<p class="tile-lbl">Rekomendasi Asupan Makan</p>'
+            f'<p class="tile-val">{_fmt_ribuan(intake_target)} kkal/hari</p>'
+            f'<p class="tile-meta">Batas aman minimum: {_fmt_ribuan(min_safe_intake)} kkal/hari</p>'
+            f'</div>'
+            f'</div>'
+            f'<div class="cal-summary-box">{narasi_kalori}<br><strong>Target Pribadi Sidebar:</strong> {target_cal_note}</div>',
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(f"#### Estimasi Durasi Olahraga untuk Membakar {_fmt_ribuan(burn_sport_day)} kkal/hari (Pada Berat {weight} kg)")
+        MET_ACTIVITIES = [
+            ("Jalan Kaki Cepat (5,5 km/jam)", 4.3, "Aman untuk semua kategori & persendian"),
+            ("Bersepeda Santai / Sepeda Statis", 5.5, "Rendah benturan lutut, cocok untuk Overweight/Obesitas"),
+            ("Berenang Gaya Bebas Ringan", 6.0, "Sangat direkomendasikan untuk Obesitas (bebas beban sendi)"),
+            ("Latihan Beban / Resistance Training", 5.0, "Optimal menjaga & membangun massa otot"),
+            ("Senam Aerobik / Kardio Ritmik", 6.5, "Efektif meningkatkan detak jantung & pembakaran kalori"),
+            ("Jogging / Lari Ringan (8 km/jam)", 7.5, "Pembakaran cepat (disarankan bila IMT < 30 kg/m²)"),
+        ]
+        met_rows = []
+        for act_name, met_val, note_act in MET_ACTIVITIES:
+            kcal_per_min = (met_val * 3.5 * weight) / 200.0
+            kcal_30m = round(kcal_per_min * 30.0)
+            durasi_target_mnt = max(5, int(round(burn_sport_day / max(kcal_per_min, 0.1))))
+            met_rows.append({
+                "Aktivitas Fisik / Olahraga": act_name,
+                "Nilai MET": str(met_val).replace(".", ","),
+                f"Terbakar per 30 Menit (BB {weight} kg)": f"{_fmt_ribuan(kcal_30m)} kkal",
+                f"Durasi Mencapai Target ({_fmt_ribuan(burn_sport_day)} kkal)": f"±{durasi_target_mnt} menit/hari",
+                "Catatan Kesesuaian": note_act,
+            })
+        render_table(pd.DataFrame(met_rows))
+
+    st.markdown('<div class="spacer-3"></div>', unsafe_allow_html=True)
+    st.markdown('<p class="section-lead">Centang kebiasaan harian pendukung rekomendasi di bawah ini:</p>', unsafe_allow_html=True)
     prog_ph=st.empty()
     done_count=0
     for i,(em,tit,desc) in enumerate(rec["items"]):
@@ -2257,7 +3112,7 @@ with t5:
             f'<p class="rec-desc">{desc}</p>'
             '</div>'
             '</div>', unsafe_allow_html=True)
-        checked=st.checkbox("Sudah saya jalani", key=f"habit_{bi}_{i}")
+        checked=st.checkbox("Sudah saya jalani", key=f"habit_{pred_main}_{i}")
         if checked: done_count+=1
         st.markdown('<div class="spacer-2"></div>', unsafe_allow_html=True)
     prog_ph.progress(done_count/len(rec["items"]), text=f"Progres kebiasaan: {done_count} dari {len(rec['items'])}")
